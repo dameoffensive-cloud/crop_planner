@@ -149,8 +149,7 @@ function planner_controller($scope){
 		
 		// Load planner config data
 		$.ajax({
-			url: "config.json?v=" + Date.now(),
-			cache: false,
+			url: "config.json?v=" + (new Date().getTime()),
 			dataType: "json",
 			success: function(config){
 				self.config = config;
@@ -169,10 +168,10 @@ function planner_controller($scope){
 					self.fertilizer[fertilizer.id] = fertilizer;
 				});
 				
-				// Process events data
-				var seasonOrder = ["spring", "summer", "fall", "winter"];
-				$.each(seasonOrder, function(s_index, season_name){
-					var season = (self.config.events && self.config.events[season_name]) ? self.config.events[season_name] : [];
+				// Process events data (deterministic season order)
+				var season_order = ["spring","summer","fall","winter"];
+				$.each(season_order, function(s_index, season_name){
+					var season = self.config.events[season_name] || [];
 					$.each(season, function(ii, c_event){
 						c_event.season = s_index;
 						c_event = new CalendarEvent(c_event);
@@ -180,7 +179,7 @@ function planner_controller($scope){
 					});
 				});
 				
-// Create newplan template
+				// Create newplan template
 				self.newplan = new Plan;
 				
 				// Load saved plans from browser storage
@@ -550,10 +549,37 @@ function planner_controller($scope){
 		if (!self.cyear) return {};
 		return self.cyear.farm();
 	}
+
+	// Combined calendar helpers (farm + greenhouse/island)
+	function calendar_plans(date){
+		if (!self.cyear) return [];
+		var a = (self.cyear.data.farm && self.cyear.data.farm.plans[date]) ? self.cyear.data.farm.plans[date] : [];
+		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.plans[date]) ? self.cyear.data.greenhouse.plans[date] : [];
+		return a.concat(b);
+	}
+	function calendar_harvests(date){
+		if (!self.cyear) return [];
+		var a = (self.cyear.data.farm && self.cyear.data.farm.harvests[date]) ? self.cyear.data.farm.harvests[date] : [];
+		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.harvests[date]) ? self.cyear.data.greenhouse.harvests[date] : [];
+		return a.concat(b);
+	}
+	function calendar_totals_day(date){
+		var fin = new Finance;
+		var a = (self.cyear.data.farm && self.cyear.data.farm.totals && self.cyear.data.farm.totals.day[date]) ? self.cyear.data.farm.totals.day[date] : null;
+		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.totals && self.cyear.data.greenhouse.totals.day[date]) ? self.cyear.data.greenhouse.totals.day[date] : null;
+		fin.profit.min = (a ? a.profit.min : 0) + (b ? b.profit.min : 0);
+		fin.profit.max = (a ? a.profit.max : 0) + (b ? b.profit.max : 0);
+		return fin;
+	}
+
+	self.calendar_plans = calendar_plans;
+	self.calendar_harvests = calendar_harvests;
+	self.calendar_totals_day = calendar_totals_day;
+
 	
 	// Check if current farm mode is greenhouse
 	function in_greenhouse(){
-		return self.cmode == "greenhouse";
+		return self.cmode != "farm";
 	}
 	
 	// Toggle current farm mode
@@ -625,7 +651,15 @@ function planner_controller($scope){
 	
 	// Filter crops that can be planted in the planner's drop down list
 	function planner_valid_crops(crop){
-		return crop.can_grow(self.cseason, true) || self.in_greenhouse();
+		// Restrict special cases
+		// Cactus Seeds are greenhouse-only (not Farm or Ginger Island in this planner)
+		if (crop.id == "cactus_seeds") return self.cmode == "greenhouse";
+
+		// On greenhouse/island (indoor modes), allow all crops.
+		if (self.in_greenhouse()) return true;
+
+		// On farm, only allow crops that can grow in the current season.
+		return crop.can_grow(self.cseason, true);
 	}
 	
 	
@@ -1108,7 +1142,10 @@ function planner_controller($scope){
 	
 	// Return current Farm object based on planner mode
 	Year.prototype.farm = function(){
-		return this.data[planner.cmode];
+		// Ginger Island behaves like Greenhouse for crop-season rules, but is stored in the greenhouse plan set.
+		var mode = planner.cmode;
+		if (mode == "island") mode = "greenhouse";
+		return this.data[mode];
 	};
 	
 	// Returns next year
@@ -1198,6 +1235,7 @@ function planner_controller($scope){
 		if (newplan.amount <= 0) return false;
 		
 		// Add plan
+		newplan.location = planner.cmode;
 		var plan = new Plan(newplan.get_data(), planner.in_greenhouse());
 		plan.date = date;
 		this.farm().plans[date].push(plan);
@@ -1388,11 +1426,15 @@ function planner_controller($scope){
 		self.crop = {};
 		self.amount = 1;
 		self.fertilizer = planner.fertilizer["none"];
-		self.harvests = [];
+		
+		self.irrigated = false;
+self.harvests = [];
 		self.greenhouse = false;
 		
 		
-		init();
+		
+		self.location = "farm";
+init();
 		
 		
 		function init(){
@@ -1402,7 +1444,9 @@ function planner_controller($scope){
 			self.amount = data.amount;
 			if (data.fertilizer && planner.fertilizer[data.fertilizer])
 				self.fertilizer = planner.fertilizer[data.fertilizer];
+			if (data && data.irrigated) self.irrigated = true;
 			self.greenhouse = in_greenhouse ? true : false;
+			self.location = (data && data.location) ? data.location : (self.greenhouse ? (planner.cmode == 'island' ? 'island' : 'greenhouse') : 'farm');
 		}
 	}
 	
@@ -1412,57 +1456,72 @@ function planner_controller($scope){
 		data.crop = this.crop.id;
 		data.amount = this.amount;
 		if (this.fertilizer && !this.fertilizer.is_none()) data.fertilizer = this.fertilizer.id;
+		if (this.irrigated) data.
+	// Location helpers for combined calendar
+	Plan.prototype.get_location_short = function(){
+		switch (this.location){
+			case "greenhouse": return "G";
+			case "island": return "I";
+			default: return "F";
+		}
+	};
+	Plan.prototype.get_location_label = function(){
+		switch (this.location){
+			case "greenhouse": return "Greenhouse";
+			case "island": return "Ginger Island";
+			default: return "Farm";
+		}
+	};
+irrigated = true;
+		if (this.location) data.location = this.location;
 		return data;
 	};
 	
 	Plan.prototype.get_grow_time = function(){
-		var stages = $.extend([], this.crop.stages);
-		
-		if (this.fertilizer.id == "speed_gro" || this.fertilizer.id == "delux_speed_gro" || planner.player.agriculturist){
-			// [SOURCE: StardewValley.TerrainFeatures/HoeDirt.cs : function plant]
-			var rate = 0;
-			switch (this.fertilizer.id){
-				case "speed_gro":
-					rate = 0.1;
-					break;
-				case "delux_speed_gro":
-					rate = 0.25;
-					break;
-			}
-			
-			// Agriculturist profession (ID 5)
-			if (planner.player.agriculturist) rate += 0.1;
-			
-			// Days to remove
-			var remove_days = Math.ceil(this.crop.grow * rate);
-			
-			// For removing more than one day from larger stages of growth
-			// when there are still days to remove
-			var multi_remove = 0;
-			
-			// Remove days from stages
-			while (remove_days > 0 && multi_remove < 3){
-				for (var i = 0; i < stages.length; i++){
-					if (i > 0 || stages[i] > 1){
-						stages[i] -= 1;
-						remove_days--;
-					}
-					
-					if (remove_days <= 0) break;
+	var stages = $.extend([], this.crop.stages);
+
+	// Irrigated paddies (near water): available on Farm or Ginger Island (not Greenhouse)
+	// Rice Shoots: 8 days (6 when irrigated). Taro Tubers: 10 days (7 when irrigated).
+	var remove_days = 0;
+	if (this.irrigated && planner.cmode != "greenhouse"){
+		if (this.crop.id == "rice_shoot") remove_days += 2;
+		else if (this.crop.id == "taro_tuber") remove_days += 3;
+	}
+
+	// Data-driven fertilizer growth rate (supports any speed fertilizer in config.json)
+	var rate = 0;
+	if (this.fertilizer && this.fertilizer.growth_rate) {
+		rate += this.fertilizer.growth_rate;
+	}
+
+	// Agriculturist profession (ID 5)
+	if (planner.player.agriculturist) rate += 0.1;
+
+	if (rate > 0){
+		remove_days += Math.ceil(this.crop.grow * rate);
+	}
+
+	if (remove_days > 0){
+		var multi_remove = 0;
+		while (remove_days > 0 && multi_remove < 3){
+			for (var i = 0; i < stages.length; i++){
+				if (i > 0 || stages[i] > 1){
+					stages[i] -= 1;
+					remove_days--;
 				}
-				
-				multi_remove++;
+				if (remove_days <= 0) break;
 			}
+			multi_remove++;
 		}
-		
-		// Add up days of growth
-		var days = 0;
-		for (var i = 0; i < stages.length; i++){
-			days += stages[i];
-		}
-		
-		return days;
-	};
+	}
+
+	var days = 0;
+	for (var j = 0; j < stages.length; j++){
+		days += stages[j];
+	}
+
+	return days;
+};
 	
 	Plan.prototype.get_cost = function(locale){
 		var amount = this.crop.buy * this.amount;
