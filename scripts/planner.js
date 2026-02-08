@@ -625,7 +625,15 @@ function planner_controller($scope){
 	
 	// Filter crops that can be planted in the planner's drop down list
 	function planner_valid_crops(crop){
-		return crop.can_grow(self.cseason, true) || self.in_greenhouse();
+		// Restrict special cases
+		// Cactus Seeds are greenhouse-only (not Farm or Ginger Island in this planner)
+		if (crop.id == "cactus_seeds") return self.cmode == "greenhouse";
+
+		// On greenhouse/island (indoor modes), allow all crops.
+		if (self.in_greenhouse()) return true;
+
+		// On farm, only allow crops that can grow in the current season.
+		return crop.can_grow(self.cseason, true);
 	}
 	
 	
