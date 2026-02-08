@@ -200,12 +200,7 @@ function planner_controller($scope){
 				update(self.years[0].data.greenhouse, true); // Update greenhouse
 				
 				self.loaded = true;
-				
-				// Footer: show data update date (from config.json)
-				if (config && config.updated_at){
-					$("#footer_version").text("Planner data last updated: " + config.updated_at);
-				}
-$scope.$apply();
+				$scope.$apply();
 			},
 			error: function(xhr, status, error){
 				if (!xhr.responseText) return;
@@ -1447,6 +1442,8 @@ init();
 			self.date = data.date;
 			self.crop = planner.crops[data.crop];
 			self.amount = data.amount;
+		// default location for legacy plans
+		self.location = data.location || planner.cmode || 'farm';
 			if (data.fertilizer && planner.fertilizer[data.fertilizer])
 				self.fertilizer = planner.fertilizer[data.fertilizer];
 			if (data && data.irrigated) self.irrigated = true;
