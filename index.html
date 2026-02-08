@@ -17,7 +17,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
 	
 	<script src="scripts/checklist-model.js"></script>	
-	<script src="scripts/planner.js?v=20260208161950"></script>
+	<script src="scripts/planner.js?v=20260208163244"></script>
 </head>
 <body ng-app="planner_app" ng-controller="planner_controller as self" ng-class="{'sidebar_open': self.sidebar.mode != ''}">
 	
@@ -391,7 +391,7 @@
 						<div class="row">
 							<div class="col-md-4 col-xs-12">
 								<b>Plant Crop</b><br>
-								<select class="form-control" ng-model="self.newplan.crop_id"
+								<select class="form-control" ng-model="self.newplan.crop_id" ng-change="self.newplan.irrigated = false"
 									ng-options="crop.id as crop.name for crop in self.crops_list | filter:self.planner_valid_crops">
 								</select>
 							</div>
@@ -414,7 +414,7 @@
 								<select class="form-control" ng-model="self.newplan.fertilizer" ng-options="fert as fert.name for fert in self.config.fertilizer track by fert.id">
 								</select>
 							
-								<div class="checkbox" style="margin-top:8px;" ng-if="self.cmode != 'greenhouse'">
+								<div class="checkbox" style="margin-top:8px;" ng-if="self.cmode != 'greenhouse' && (self.newplan.crop_id == 'rice_shoot' || self.newplan.crop_id == 'taro_tuber')">
 									<label>
 										<input type="checkbox" ng-model="self.newplan.irrigated">
 										Irrigated (near water)
