@@ -201,6 +201,11 @@ function planner_controller($scope){
 				update(self.years[0].data.greenhouse, true); // Update greenhouse
 				
 				self.loaded = true;
+		// Footer: show data update date
+		if (data.updated_at){
+			$("#footer_version").text("Planner data last updated: " + data.updated_at);
+		}
+
 				$scope.$apply();
 			},
 			error: function(xhr, status, error){
