@@ -1424,7 +1424,7 @@ function planner_controller($scope){
 		rate += this.fertilizer.growth_rate;
 	}
 
-	// Agriculturist profession (ID 5): +10% faster
+	// Agriculturist profession (ID 5)
 	if (planner.player.agriculturist) rate += 0.1;
 
 	if (rate > 0){
@@ -1455,7 +1455,9 @@ function planner_controller($scope){
 	}
 
 	return days;
-};Plan.prototype.get_cost = function(locale){
+};
+	
+	Plan.prototype.get_cost = function(locale){
 		var amount = this.crop.buy * this.amount;
 		if (locale) return amount.toLocaleString();
 		return amount;
