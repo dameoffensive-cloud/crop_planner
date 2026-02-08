@@ -550,6 +550,33 @@ function planner_controller($scope){
 		if (!self.cyear) return {};
 		return self.cyear.farm();
 	}
+
+	// Combined calendar helpers (farm + greenhouse/island)
+	function calendar_plans(date){
+		if (!self.cyear) return [];
+		var a = (self.cyear.data.farm && self.cyear.data.farm.plans[date]) ? self.cyear.data.farm.plans[date] : [];
+		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.plans[date]) ? self.cyear.data.greenhouse.plans[date] : [];
+		return a.concat(b);
+	}
+	function calendar_harvests(date){
+		if (!self.cyear) return [];
+		var a = (self.cyear.data.farm && self.cyear.data.farm.harvests[date]) ? self.cyear.data.farm.harvests[date] : [];
+		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.harvests[date]) ? self.cyear.data.greenhouse.harvests[date] : [];
+		return a.concat(b);
+	}
+	function calendar_totals_day(date){
+		var fin = new Finance;
+		var a = (self.cyear.data.farm && self.cyear.data.farm.totals && self.cyear.data.farm.totals.day[date]) ? self.cyear.data.farm.totals.day[date] : null;
+		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.totals && self.cyear.data.greenhouse.totals.day[date]) ? self.cyear.data.greenhouse.totals.day[date] : null;
+		fin.profit.min = (a ? a.profit.min : 0) + (b ? b.profit.min : 0);
+		fin.profit.max = (a ? a.profit.max : 0) + (b ? b.profit.max : 0);
+		return fin;
+	}
+
+	self.calendar_plans = calendar_plans;
+	self.calendar_harvests = calendar_harvests;
+	self.calendar_totals_day = calendar_totals_day;
+
 	
 	// Check if current farm mode is greenhouse
 	function in_greenhouse(){
@@ -1209,6 +1236,7 @@ function planner_controller($scope){
 		if (newplan.amount <= 0) return false;
 		
 		// Add plan
+		newplan.location = planner.cmode;
 		var plan = new Plan(newplan.get_data(), planner.in_greenhouse());
 		plan.date = date;
 		this.farm().plans[date].push(plan);
@@ -1405,7 +1433,9 @@ self.harvests = [];
 		self.greenhouse = false;
 		
 		
-		init();
+		
+		self.location = \"farm\";
+init();
 		
 		
 		function init(){
@@ -1417,6 +1447,7 @@ self.harvests = [];
 				self.fertilizer = planner.fertilizer[data.fertilizer];
 			if (data && data.irrigated) self.irrigated = true;
 			self.greenhouse = in_greenhouse ? true : false;
+			self.location = (data && data.location) ? data.location : (self.greenhouse ? (planner.cmode == 'island' ? 'island' : 'greenhouse') : 'farm');
 		}
 	}
 	
@@ -1426,7 +1457,24 @@ self.harvests = [];
 		data.crop = this.crop.id;
 		data.amount = this.amount;
 		if (this.fertilizer && !this.fertilizer.is_none()) data.fertilizer = this.fertilizer.id;
-		if (this.irrigated) data.irrigated = true;
+		if (this.irrigated) data.
+	// Location helpers for combined calendar
+	Plan.prototype.get_location_short = function(){
+		switch (this.location){
+			case "greenhouse": return "G";
+			case "island": return "I";
+			default: return "F";
+		}
+	};
+	Plan.prototype.get_location_label = function(){
+		switch (this.location){
+			case "greenhouse": return "Greenhouse";
+			case "island": return "Ginger Island";
+			default: return "Farm";
+		}
+	};
+irrigated = true;
+		if (this.location) data.location = this.location;
 		return data;
 	};
 	
