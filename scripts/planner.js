@@ -548,9 +548,7 @@ function planner_controller($scope){
 	// Get current farm object of current year
 	function cfarm(){
 		if (!self.cyear) return {};
-		// Farm uses outdoor farm plans; Greenhouse and Ginger Island share the same year greenhouse plan set
-		if (self.cmode == "farm") return self.cyear.data.farm;
-		return self.cyear.data.greenhouse;
+		return self.cyear.farm();
 	}
 	
 	// Check if current farm mode is greenhouse
@@ -562,8 +560,6 @@ function planner_controller($scope){
 	function toggle_mode(){
 		if (self.cmode == "farm"){
 			set_mode("greenhouse");
-		} else if (self.cmode == "greenhouse"){
-			set_mode("island");
 		} else {
 			set_mode("farm");
 		}
@@ -1112,7 +1108,10 @@ function planner_controller($scope){
 	
 	// Return current Farm object based on planner mode
 	Year.prototype.farm = function(){
-		return this.data[planner.cmode];
+		// Ginger Island behaves like Greenhouse for crop-season rules, but is stored in the greenhouse plan set.
+		var mode = planner.cmode;
+		if (mode == "island") mode = "greenhouse";
+		return this.data[mode];
 	};
 	
 	// Returns next year
