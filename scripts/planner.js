@@ -1434,7 +1434,7 @@ self.harvests = [];
 		
 		
 		
-		self.location = \"farm\";
+		self.location = "farm";
 init();
 		
 		
