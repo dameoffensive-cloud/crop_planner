@@ -133,65 +133,6 @@
 			]
 		},
 		{
-			"buy": 40,
-			"harvest": {},
-			"id": "broccoli",
-			"index": 748,
-			"name": "Broccoli",
-			"seasons": [
-				"fall"
-			],
-			"sell": 70,
-			"stages": [
-				2,
-				2,
-				2,
-				2
-			],
-			"regrow": 4,
-			"note": "Seeds not sold (1.6+); obtained from Seed Spots/Raccoon/etc. Buy value set to seed sell price for planning."
-		},
-		{
-			"id": "cactus_seeds",
-			"name": "Cactus (Cactus Fruit)",
-			"buy": 150,
-			"sell": 75,
-			"seasons": [
-				"spring",
-				"summer",
-				"fall",
-				"winter"
-			],
-			"stages": [
-				2,
-				2,
-				2,
-				3,
-				3
-			],
-			"regrow": 3,
-			"greenhouse_only": true,
-			"note": "Can only be grown indoors (Greenhouse/Garden Pot). Takes 12 days to mature, then produces fruit every 3 days.",
-			"harvest": {}
-		},
-		{
-			"buy": 15,
-			"harvest": {},
-			"id": "carrot",
-			"index": 746,
-			"name": "Carrot",
-			"seasons": [
-				"spring"
-			],
-			"sell": 35,
-			"stages": [
-				1,
-				1,
-				1
-			],
-			"note": "Seeds not sold (1.6+); obtained from Seed Spots/Raccoon/etc. Buy value set to seed sell price for planning."
-		},
-		{
 			"buy": 80,
 			"harvest": {},
 			"id": "cauliflower",
@@ -535,25 +476,6 @@
 			]
 		},
 		{
-			"buy": 20,
-			"harvest": {},
-			"id": "powdermelon",
-			"index": 749,
-			"name": "Powdermelon",
-			"seasons": [
-				"winter"
-			],
-			"sell": 60,
-			"stages": [
-				1,
-				1,
-				1,
-				2,
-				2
-			],
-			"note": "Seeds not sold (1.6+); obtained from Seed Spots/Raccoon/etc. Buy value set to seed sell price for planning."
-		},
-		{
 			"buy": 100,
 			"harvest": {},
 			"id": "pumpkin",
@@ -625,24 +547,6 @@
 			]
 		},
 		{
-			"id": "rice_shoot",
-			"name": "Rice Shoot (Unmilled Rice)",
-			"buy": 0,
-			"sell": 33,
-			"seasons": [
-				"spring"
-			],
-			"stages": [
-				1,
-				2,
-				2,
-				3
-			],
-			"regrow": 0,
-			"note": "Base growth 8 days (6 if irrigated/near water). Planner assumes 8 days.",
-			"harvest": {}
-		},
-		{
 			"buy": 400,
 			"harvest": {},
 			"id": "starfruit",
@@ -702,26 +606,6 @@
 			]
 		},
 		{
-			"buy": 20,
-			"harvest": {},
-			"id": "summer_squash",
-			"index": 747,
-			"name": "Summer Squash",
-			"seasons": [
-				"summer"
-			],
-			"sell": 45,
-			"stages": [
-				1,
-				1,
-				1,
-				1,
-				2
-			],
-			"regrow": 3,
-			"note": "Seeds not sold (1.6+); obtained from Seed Spots/Raccoon/etc. Buy value set to seed sell price for planning."
-		},
-		{
 			"buy": 125,
 			"harvest": {},
 			"id": "sunflower",
@@ -757,42 +641,6 @@
 				6,
 				6
 			]
-		},
-		{
-			"id": "taro_tuber",
-			"name": "Taro Tuber (Taro Root)",
-			"buy": 0,
-			"sell": 100,
-			"seasons": [
-				"summer"
-			],
-			"stages": [
-				1,
-				2,
-				3,
-				4
-			],
-			"regrow": 0,
-			"note": "Base growth 10 days (7 if irrigated/near water). Summer in the Valley; all seasons on Ginger Island. Planner assumes 10 days.",
-			"harvest": {}
-		},
-		{
-			"id": "tea_sapling",
-			"name": "Tea Sapling (Tea Bush)",
-			"buy": 0,
-			"sell": 50,
-			"seasons": [
-				"spring",
-				"summer",
-				"fall",
-				"winter"
-			],
-			"stages": [
-				20
-			],
-			"regrow": 1,
-			"note": "Matures in 20 days. Produces 1 Tea Leaves each day on days 22\u201328 of Spring/Summer/Fall (and Winter if indoors).",
-			"harvest": {}
 		},
 		{
 			"buy": 50,
@@ -899,23 +747,6 @@
 			"growth_rate": 0.25,
 			"id": "delux_speed_gro",
 			"name": "Delux Speed-Gro"
-		},
-		{
-			"buy": 150,
-			"growth_rate": 0.25,
-			"id": "deluxe_speed_gro",
-			"name": "Deluxe Speed-Gro"
-		},
-		{
-			"buy": 0,
-			"growth_rate": 0.33,
-			"id": "hyper_speed_gro",
-			"name": "Hyper Speed-Gro"
-		},
-		{
-			"buy": 0,
-			"id": "deluxe_fertilizer",
-			"name": "Deluxe Fertilizer"
 		}
 	],
 	"events": {
@@ -940,21 +771,6 @@
 			{
 				"day": 14,
 				"name": "Haley"
-			},
-			{
-				"day": 15,
-				"name": "Desert Festival",
-				"festival": true
-			},
-			{
-				"day": 16,
-				"name": "Desert Festival",
-				"festival": true
-			},
-			{
-				"day": 17,
-				"name": "Desert Festival",
-				"festival": true
 			},
 			{
 				"day": 18,
@@ -1009,26 +825,12 @@
 				"name": "Demetrius"
 			},
 			{
-				"day": 20,
-				"name": "Trout Derby",
-				"festival": true
-			},
-			{
-				"day": 21,
-				"name": "Trout Derby",
-				"festival": true
-			},
-			{
 				"day": 22,
 				"name": "Dwarf"
 			},
 			{
 				"day": 24,
 				"name": "Willy"
-			},
-			{
-				"day": 26,
-				"name": "Leo"
 			},
 			{
 				"day": 28,
@@ -1103,33 +905,8 @@
 				"name": "Sebastian"
 			},
 			{
-				"day": 12,
-				"name": "SquidFest",
-				"festival": true
-			},
-			{
-				"day": 13,
-				"name": "SquidFest",
-				"festival": true
-			},
-			{
 				"day": 14,
 				"name": "Harvey"
-			},
-			{
-				"day": 15,
-				"name": "Night Market",
-				"festival": true
-			},
-			{
-				"day": 16,
-				"name": "Night Market",
-				"festival": true
-			},
-			{
-				"day": 17,
-				"name": "Night Market",
-				"festival": true
 			},
 			{
 				"day": 17,
