@@ -403,7 +403,7 @@
 							</div>
 							<div class="col-md-3 col-xs-4">
 								<b>Location</b><br>
-								<select class="form-control" ng-model="self.cmode">
+								<select class="form-control" ng-model="self.cmode" ng-change="self.newplan.irrigated = false">
 									<option value="farm">Farm</option>
 									<option value="greenhouse">Greenhouse</option>
 									<option value="island">Ginger Island</option>
@@ -413,6 +413,12 @@
 								<b>Fertilizer</b><br>
 								<select class="form-control" ng-model="self.newplan.fertilizer" ng-options="fert as fert.name for fert in self.config.fertilizer track by fert.id">
 								</select>
+								<div class="checkbox" style="margin-top:8px;" ng-if="self.cmode != 'greenhouse'">
+									<label>
+										<input type="checkbox" ng-model="self.newplan.irrigated">
+										Irrigated (near water)
+									</label>
+								</div>
 							</div>
 							<div class="col-md-3 col-xs-4">
 								<b></b><br>
