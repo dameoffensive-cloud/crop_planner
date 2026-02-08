@@ -199,6 +199,7 @@ function planner_controller($scope){
 				// Update plans
 				update(self.years[0].data.farm, true); // Update farm
 				update(self.years[0].data.greenhouse, true); // Update greenhouse
+				update(self.years[0].data.island, true); // Update island
 				
 				self.loaded = true;
 				$scope.$apply();
@@ -1103,7 +1104,8 @@ function planner_controller($scope){
 			
 			self.data.farm = new Farm(self);
 			self.data.greenhouse = new Farm(self, true);
-		}
+		
+			self.data.island = new Farm(self, true, 'island');}
 	}
 	
 	// Return current Farm object based on planner mode
@@ -1170,7 +1172,7 @@ function planner_controller($scope){
 				$.each(plans, function(i, plan){
 					plan.date = date;
 					if (!planner.crops[plan.crop]) return; // Invalid crop
-					var plan_object = new Plan(plan, type == "greenhouse");
+					var plan_object = new Plan(plan, type != "farm");
 					self.data[type].plans[date].push(plan_object);
 					plan_count++;
 				});
@@ -1230,10 +1232,11 @@ function planner_controller($scope){
 	/****************
 		Farm class - used only within Year
 	****************/
-	function Farm(parent_year, is_greenhouse){
+	function Farm(parent_year, is_greenhouse, mode_id){
 		var self = this;
 		self.year;
 		self.greenhouse = false;
+		self.mode = mode_id || (is_greenhouse ? 'greenhouse' : 'farm');
 		self.plans = {};
 		self.harvests = {};
 		self.totals = {};
@@ -1246,6 +1249,7 @@ function planner_controller($scope){
 			self.year = parent_year;
 			self.greenhouse = is_greenhouse;
 			
+			self.mode = mode_id || (is_greenhouse ? 'greenhouse' : 'farm');
 			for (var i = 0; i < YEAR_DAYS; i++){
 				self.plans[i+1] = [];
 			}
@@ -1275,7 +1279,9 @@ function planner_controller($scope){
 	
 	// Get image representing farm type
 	Farm.prototype.get_image = function(){
-		var type = this.greenhouse ? "greenhouse" : "scarecrow";
+		var type = "scarecrow";
+		if (this.mode == "greenhouse") type = "greenhouse";
+		else if (this.mode == "island") type = "ginger_island";
 		return "images/" + type + ".png";
 	};
 	
@@ -1392,6 +1398,7 @@ function planner_controller($scope){
 		self.greenhouse = false;
 		
 		
+		self.mode = mode_id || (is_greenhouse ? 'greenhouse' : 'farm');
 		init();
 		
 		
@@ -1416,46 +1423,53 @@ function planner_controller($scope){
 	};
 	
 	Plan.prototype.get_grow_time = function(){
-	var stages = $.extend([], this.crop.stages);
-
-	// Data-driven fertilizer growth rate (supports any speed fertilizer in config.json)
-	var rate = 0;
-	if (this.fertilizer && this.fertilizer.growth_rate) {
-		rate += this.fertilizer.growth_rate;
-	}
-
-	// Agriculturist profession (ID 5)
-	if (planner.player.agriculturist) rate += 0.1;
-
-	if (rate > 0){
-		// Days to remove
-		var remove_days = Math.ceil(this.crop.grow * rate);
-
-		// For removing more than one day from larger stages of growth
-		// when there are still days to remove
-		var multi_remove = 0;
-
-		// Remove days from stages
-		while (remove_days > 0 && multi_remove < 3){
-			for (var i = 0; i < stages.length; i++){
-				if (i > 0 || stages[i] > 1){
-					stages[i] -= 1;
-					remove_days--;
-				}
-				if (remove_days <= 0) break;
+		var stages = $.extend([], this.crop.stages);
+		
+		if (this.fertilizer.id == "speed_gro" || this.fertilizer.id == "delux_speed_gro" || planner.player.agriculturist){
+			// [SOURCE: StardewValley.TerrainFeatures/HoeDirt.cs : function plant]
+			var rate = 0;
+			switch (this.fertilizer.id){
+				case "speed_gro":
+					rate = 0.1;
+					break;
+				case "delux_speed_gro":
+					rate = 0.25;
+					break;
 			}
-			multi_remove++;
+			
+			// Agriculturist profession (ID 5)
+			if (planner.player.agriculturist) rate += 0.1;
+			
+			// Days to remove
+			var remove_days = Math.ceil(this.crop.grow * rate);
+			
+			// For removing more than one day from larger stages of growth
+			// when there are still days to remove
+			var multi_remove = 0;
+			
+			// Remove days from stages
+			while (remove_days > 0 && multi_remove < 3){
+				for (var i = 0; i < stages.length; i++){
+					if (i > 0 || stages[i] > 1){
+						stages[i] -= 1;
+						remove_days--;
+					}
+					
+					if (remove_days <= 0) break;
+				}
+				
+				multi_remove++;
+			}
 		}
-	}
-
-	// Add up days of growth
-	var days = 0;
-	for (var j = 0; j < stages.length; j++){
-		days += stages[j];
-	}
-
-	return days;
-};
+		
+		// Add up days of growth
+		var days = 0;
+		for (var i = 0; i < stages.length; i++){
+			days += stages[i];
+		}
+		
+		return days;
+	};
 	
 	Plan.prototype.get_cost = function(locale){
 		var amount = this.crop.buy * this.amount;
