@@ -51,7 +51,7 @@
 					</div>
 					<div class="year_info">
 						<div class="yi_name">Year {{self.cyear.index+1}}, {{self.cseason.name}}</div>
-						<div class="yi_farmtype">{{self.cmode}}</div>
+						<div class="yi_farmtype">{{self.cmode=="farm" && "farm" || (self.cmode=="greenhouse" && "greenhouse" || "ginger island")}}</div>
 					</div>
 				</div>
 				
@@ -400,6 +400,14 @@
 									<b>Amount</b><br>
 									<input class="form-control" type="text" ng-model="self.newplan.amount" ng-keypress="self.add_plan_key(self.cdate, $event)">
 								</label>
+							</div>
+							<div class="col-md-3 col-xs-4">
+								<b>Location</b><br>
+								<select class="form-control" ng-model="self.cmode">
+									<option value="farm">Farm</option>
+									<option value="greenhouse">Greenhouse</option>
+									<option value="island">Ginger Island</option>
+								</select>
 							</div>
 							<div class="col-md-3 col-xs-4">
 								<b>Fertilizer</b><br>
