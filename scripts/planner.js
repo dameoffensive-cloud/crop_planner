@@ -334,40 +334,21 @@ function planner_controller($scope){
 				// growth season(s), continue $.each
 				if (first_harvest > crop_end) return;
 				
-				// Harvests
+				// Initial harvest
 				var harvests = [];
-
-				// Special-case: Tea Sapling / Tea Bush only produces on days 22-28 of each season.
-				// Outdoors: Spring/Summer/Fall only. Indoors (greenhouse / island): all seasons.
-				if (crop.id == "tea_sapling"){
-					var is_indoor = farm.greenhouse; // greenhouse and island are treated as indoor modes
-					for (var d = first_harvest; d <= crop_end; d++){
-						var day_in_season = ((d - 1) % SEASON_DAYS) + 1;
-						if (day_in_season < 22) continue;
-
-						// If outdoors, skip winter tea harvests
-						if (!is_indoor){
-							var season_index = Math.floor((d - 1) / SEASON_DAYS);
-							if (season_index == 3) continue; // winter
-						}
-
-						harvests.push(new Harvest(plan, d, d != first_harvest));
-					}
-				} else {
-					// Initial harvest
-					harvests.push(new Harvest(plan, first_harvest));
-
-					// Regrowth harvests
-					if (crop.regrow){
-						var regrowths = Math.floor((crop_end - first_harvest) / crop.regrow);
-						for (var i = 1; i <= regrowths; i++){
-							var regrow_date = first_harvest + (i * crop.regrow);
-							if (regrow_date > crop_end) break;
-							harvests.push(new Harvest(plan, regrow_date, true));
-						}
+				harvests.push(new Harvest(plan, first_harvest));
+				
+				// Regrowth harvests
+				if (crop.regrow){
+					var regrowths = Math.floor((crop_end - first_harvest) / crop.regrow);
+					for (var i = 1; i <= regrowths; i++){
+						var regrow_date = first_harvest + (i * crop.regrow);
+						if (regrow_date > crop_end) break;
+						harvests.push(new Harvest(plan, regrow_date, true));
 					}
 				}
-// Assign harvests to plan object
+				
+				// Assign harvests to plan object
 				plan.harvests = harvests;
 				
 				// Add up all harvests
@@ -644,9 +625,6 @@ function planner_controller($scope){
 	
 	// Filter crops that can be planted in the planner's drop down list
 	function planner_valid_crops(crop){
-		// Cactus Seeds (and any future greenhouse-only crops) should only be plantable in the Greenhouse.
-		if (crop.greenhouse_only) return self.cmode == "greenhouse";
-		// Farm: seasonal rules. Greenhouse + Ginger Island: allow any-season planting.
 		return crop.can_grow(self.cseason, true) || self.in_greenhouse();
 	}
 	
@@ -1414,7 +1392,8 @@ function planner_controller($scope){
 		self.amount = 1;
 		self.fertilizer = planner.fertilizer["none"];
 		
-		self.irrigated = false;self.harvests = [];
+		self.irrigated = false;
+self.harvests = [];
 		self.greenhouse = false;
 		
 		
