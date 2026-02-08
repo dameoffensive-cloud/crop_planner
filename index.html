@@ -17,7 +17,24 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
 	
 	<script src="scripts/checklist-model.js"></script>	
-	<script src="scripts/planner.js?v=20260208163244"></script>
+	<script src="scripts/planner.js?v=20260208164102"></script>
+
+<style>
+.loc_badge{
+	position:absolute;
+	right:2px;
+	top:2px;
+	font-size:10px;
+	line-height:12px;
+	padding:1px 4px;
+	border-radius:10px;
+	background:rgba(0,0,0,0.55);
+	color:#fff;
+}
+.plan{ position:relative; }
+.loc_inline{ opacity:0.7; font-size: 0.9em; }
+</style>
+
 </head>
 <body ng-app="planner_app" ng-controller="planner_controller as self" ng-class="{'sidebar_open': self.sidebar.mode != ''}">
 	
@@ -127,7 +144,7 @@
 					<div class="day_name">Su</div>
 				</div>
 				<div class="day_container">
-					<div class="day" ng-repeat="date in self.days | limitTo:self.SEASON_DAYS:self.cseason.start-1" ng-click="self.open_plans(date)" ng-class="{'filled': self.cfarm().plans[date].length || self.cfarm().harvests[date].length}">
+					<div class="day" ng-repeat="date in self.days | limitTo:self.SEASON_DAYS:self.cseason.start-1" ng-click="self.open_plans(date)" ng-class="{'filled': self.calendar_plans(date).length || self.calendar_harvests(date).length}">
 						
 						<div class="date_top">
 							<div class="date">
@@ -140,35 +157,36 @@
 							</div>
 						</div>
 						
-						<div ng-show="self.cfarm().plans[date].length" class="items">
+						<div ng-show="self.calendar_plans(date).length" class="items">
 							<div class="planting">
-								<div class="plan" ng-repeat="plan in self.cfarm().plans[date] | limitTo:4">
+								<div class="plan" ng-repeat="plan in self.calendar_plans(date) | limitTo:4">
 									<img ng-src="{{plan.crop.get_image(1)}}">
+										<div class="loc_badge" title="{{plan.get_location_label()}}">{{plan.get_location_short()}}</div>
 									<div class="amount">x{{plan.amount}}</div>
 								</div>
 							</div>
-							<div class="more" ng-show="self.cfarm().plans[date].length > 4">{{self.cfarm().plans[date].length-4}} more...</div>
+							<div class="more" ng-show="self.calendar_plans(date).length > 4">{{self.calendar_plans(date).length-4}} more...</div>
 						</div>
 						
-						<div ng-show="self.cfarm().harvests[date].length">
+						<div ng-show="self.calendar_harvests(date).length">
 							<div class="harvesting">
-								<div class="plan" ng-repeat="harvest in self.cfarm().harvests[date] | limitTo:4">
+								<div class="plan" ng-repeat="harvest in self.calendar_harvests(date) | limitTo:4">
 									<img ng-src="{{harvest.crop.get_image()}}">
 									<div class="amount">x{{harvest.yield.min}}</div>
 								</div>
 							</div>
-							<div class="more" ng-show="self.cfarm().harvests[date].length > 4">{{self.cfarm().harvests[date].length-4}} more...</div>
+							<div class="more" ng-show="self.calendar_harvests(date).length > 4">{{self.calendar_harvests(date).length-4}} more...</div>
 						</div>
 						
-						<div ng-show="self.cfarm().totals.day[date].profit.min || self.cfarm().totals.day[date].profit.max">
-							<div class="profit min" ng-show="self.cfarm().totals.day[date].profit.min==self.cfarm().totals.day[date].profit.max">
-								<div>{{self.cfarm().totals.day[date].profit.min>0 && '+' || ''}}{{self.cfarm().totals.day[date].get_profit(1)}}g</div>
+						<div ng-show="self.calendar_totals_day(date).profit.min || self.calendar_totals_day(date).profit.max">
+							<div class="profit min" ng-show="self.calendar_totals_day(date).profit.min==self.calendar_totals_day(date).profit.max">
+								<div>{{self.calendar_totals_day(date).profit.min>0 && '+' || ''}}{{self.calendar_totals_day(date).get_profit(1)}}g</div>
 							</div>
 							
-							<div class="profit" ng-show="self.cfarm().totals.day[date].profit.min!=self.cfarm().totals.day[date].profit.max">
+							<div class="profit" ng-show="self.calendar_totals_day(date).profit.min!=self.calendar_totals_day(date).profit.max">
 								<i class="asc_icon fa fa-sort-amount-asc"></i>
-								<div>{{self.cfarm().totals.day[date].profit.min>0 && '+' || ''}}{{self.cfarm().totals.day[date].get_profit(1)}}g</div>
-								<div>{{self.cfarm().totals.day[date].profit.max>0 && '+' || ''}}{{self.cfarm().totals.day[date].get_profit(1, 1)}}g</div>
+								<div>{{self.calendar_totals_day(date).profit.min>0 && '+' || ''}}{{self.calendar_totals_day(date).get_profit(1)}}g</div>
+								<div>{{self.calendar_totals_day(date).profit.max>0 && '+' || ''}}{{self.calendar_totals_day(date).get_profit(1, 1)}}g</div>
 							</div>
 						</div>
 					</div>
@@ -430,7 +448,7 @@
 						<br>
 					</div>
 					
-					<div ng-show="self.cfarm().plans[self.cdate].length">
+					<div ng-show="self.calendar_plans(self.cdate).length">
 						<div class="panel panel-default">
 							<div class="panel-heading">
 								<h3 class="panel-title"><i class="fa fa-tint"></i> Planting</h3>
@@ -441,6 +459,7 @@
 										<tr>
 											<th colspan="2">Crop</th>
 											<th>Amount</th>
+											<th>Loc</th>
 											<th>Fertilizer</th>
 											<th>Cost</th>
 											<th><i class="fa fa-clock-o"></i> Days</th>
@@ -450,12 +469,12 @@
 										</tr>
 									</thead>
 									<tbody>
-										<tr class="crop" ng-repeat="plan in self.cfarm().plans[self.cdate]">
+										<tr class="crop" ng-repeat="plan in self.calendar_plans(self.cdate)">
 											<td width="1">
 												<img ng-src="{{plan.crop.get_image(1)}}">
 											</td>
 											<td>
-												{{plan.crop.name}}
+												{{plan.crop.name}} <span class="loc_inline">({{plan.get_location_short()}})</span>
 											</td>
 											<td>
 												<span ng-show="self.editplan!=plan">x{{plan.amount}}</span>
@@ -484,9 +503,9 @@
 							</div>
 						</div>
 					</div>
-					<div ng-show="!self.cfarm().plans[self.cdate].length" class="text-muted"><i class="fa fa-tint"></i> No planting.<hr></div>
+					<div ng-show="!self.calendar_plans(self.cdate).length" class="text-muted"><i class="fa fa-tint"></i> No planting.<hr></div>
 					
-					<div ng-show="self.cfarm().harvests[self.cdate].length">
+					<div ng-show="self.calendar_harvests(self.cdate).length">
 						<div class="panel panel-default">
 							<div class="panel-heading">
 								<h3 class="panel-title"><i class="fa fa-pagelines"></i> Harvesting</h3>
@@ -503,7 +522,7 @@
 										</tr>
 									</thead>
 									<tbody>
-										<tr class="crop" ng-repeat="harvest in self.cfarm().harvests[self.cdate]">
+										<tr class="crop" ng-repeat="harvest in self.calendar_harvests(self.cdate)">
 											<td width="1">
 												<img ng-src="{{harvest.crop.get_image()}}">
 											</td>
@@ -539,7 +558,7 @@
 							</div>
 						</div>
 					</div>
-					<div ng-show="!self.cfarm().harvests[self.cdate].length" class="text-muted"><i class="fa fa-pagelines"></i> No harvests.</div>
+					<div ng-show="!self.calendar_harvests(self.cdate).length" class="text-muted"><i class="fa fa-pagelines"></i> No harvests.</div>
 				</div>
 				<div class="modal-footer">
 					<div class="btn btn-default" data-dismiss="modal"><i class="fa fa-check"></i> Done</div>
