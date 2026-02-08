@@ -149,7 +149,8 @@ function planner_controller($scope){
 		
 		// Load planner config data
 		$.ajax({
-			url: "config.json",
+			url: "config.json?v=" + Date.now(),
+			cache: false,
 			dataType: "json",
 			success: function(config){
 				self.config = config;
@@ -169,18 +170,17 @@ function planner_controller($scope){
 				});
 				
 				// Process events data
-				var s_index = 0;
-				$.each(self.config.events, function(season_name, season){
+				var seasonOrder = ["spring", "summer", "fall", "winter"];
+				$.each(seasonOrder, function(s_index, season_name){
+					var season = (self.config.events && self.config.events[season_name]) ? self.config.events[season_name] : [];
 					$.each(season, function(ii, c_event){
 						c_event.season = s_index;
 						c_event = new CalendarEvent(c_event);
-						self.events[c_event.date] = c_event;						
+						self.events[c_event.date] = c_event;
 					});
-					
-					s_index++;
 				});
 				
-				// Create newplan template
+// Create newplan template
 				self.newplan = new Plan;
 				
 				// Load saved plans from browser storage
@@ -201,12 +201,6 @@ function planner_controller($scope){
 				update(self.years[0].data.greenhouse, true); // Update greenhouse
 				
 				self.loaded = true;
-
-				// Footer: show data update date (from config.json)
-				if (config && config.updated_at){
-					$("#footer_version").text("Planner data last updated: " + config.updated_at);
-				}
-
 				$scope.$apply();
 			},
 			error: function(xhr, status, error){
@@ -1422,46 +1416,53 @@ function planner_controller($scope){
 	};
 	
 	Plan.prototype.get_grow_time = function(){
-	var stages = $.extend([], this.crop.stages);
-
-	// Data-driven fertilizer growth rate (supports any speed fertilizer in config.json)
-	var rate = 0;
-	if (this.fertilizer && this.fertilizer.growth_rate) {
-		rate += this.fertilizer.growth_rate;
-	}
-
-	// Agriculturist profession (ID 5)
-	if (planner.player.agriculturist) rate += 0.1;
-
-	if (rate > 0){
-		// Days to remove
-		var remove_days = Math.ceil(this.crop.grow * rate);
-
-		// For removing more than one day from larger stages of growth
-		// when there are still days to remove
-		var multi_remove = 0;
-
-		// Remove days from stages
-		while (remove_days > 0 && multi_remove < 3){
-			for (var i = 0; i < stages.length; i++){
-				if (i > 0 || stages[i] > 1){
-					stages[i] -= 1;
-					remove_days--;
-				}
-				if (remove_days <= 0) break;
+		var stages = $.extend([], this.crop.stages);
+		
+		if (this.fertilizer.id == "speed_gro" || this.fertilizer.id == "delux_speed_gro" || planner.player.agriculturist){
+			// [SOURCE: StardewValley.TerrainFeatures/HoeDirt.cs : function plant]
+			var rate = 0;
+			switch (this.fertilizer.id){
+				case "speed_gro":
+					rate = 0.1;
+					break;
+				case "delux_speed_gro":
+					rate = 0.25;
+					break;
 			}
-			multi_remove++;
+			
+			// Agriculturist profession (ID 5)
+			if (planner.player.agriculturist) rate += 0.1;
+			
+			// Days to remove
+			var remove_days = Math.ceil(this.crop.grow * rate);
+			
+			// For removing more than one day from larger stages of growth
+			// when there are still days to remove
+			var multi_remove = 0;
+			
+			// Remove days from stages
+			while (remove_days > 0 && multi_remove < 3){
+				for (var i = 0; i < stages.length; i++){
+					if (i > 0 || stages[i] > 1){
+						stages[i] -= 1;
+						remove_days--;
+					}
+					
+					if (remove_days <= 0) break;
+				}
+				
+				multi_remove++;
+			}
 		}
-	}
-
-	// Add up days of growth
-	var days = 0;
-	for (var j = 0; j < stages.length; j++){
-		days += stages[j];
-	}
-
-	return days;
-};
+		
+		// Add up days of growth
+		var days = 0;
+		for (var i = 0; i < stages.length; i++){
+			days += stages[i];
+		}
+		
+		return days;
+	};
 	
 	Plan.prototype.get_cost = function(locale){
 		var amount = this.crop.buy * this.amount;
