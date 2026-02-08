@@ -959,6 +959,7 @@ function planner_controller($scope){
 		self.stages = [];
 		self.regrow;
 		self.wild = false;
+		self.paddy = null; // {dry_days, irrigated_days}
 		
 		// Harvest data
 		self.harvest = {
@@ -992,6 +993,7 @@ function planner_controller($scope){
 			self.stages = data.stages;
 			self.regrow = data.regrow;
 			if (data.wild) self.wild = true;
+			if (data.paddy) self.paddy = data.paddy;
 			
 			// Harvest data
 			if (data.harvest.min) self.harvest.min = data.harvest.min;
@@ -1390,7 +1392,7 @@ function planner_controller($scope){
 		self.fertilizer = planner.fertilizer["none"];
 		self.harvests = [];
 		self.greenhouse = false;
-		
+		self.irrigated = false; // for paddy crops (e.g., Rice)
 		
 		init();
 		
@@ -1402,6 +1404,7 @@ function planner_controller($scope){
 			self.amount = data.amount;
 			if (data.fertilizer && planner.fertilizer[data.fertilizer])
 				self.fertilizer = planner.fertilizer[data.fertilizer];
+			if (data.irrigated) self.irrigated = true;
 			self.greenhouse = in_greenhouse ? true : false;
 		}
 	}
@@ -1412,12 +1415,27 @@ function planner_controller($scope){
 		data.crop = this.crop.id;
 		data.amount = this.amount;
 		if (this.fertilizer && !this.fertilizer.is_none()) data.fertilizer = this.fertilizer.id;
+		if (this.irrigated) data.irrigated = true;
 		return data;
 	};
 	
 	Plan.prototype.get_grow_time = function(){
+		// For most crops, growth is derived from the crop's stage list.
+		// For paddy crops (e.g., Rice), growth depends on whether the tile is irrigated (near water).
+		var base_grow = this.crop.grow; // default
 		var stages = $.extend([], this.crop.stages);
-		
+
+		if (this.crop.paddy){
+			// Use configured paddy growth times if provided.
+			// Expecting: {dry_days: 8, irrigated_days: 6}
+			var dry = (this.crop.paddy.dry_days || this.crop.grow);
+			var irr = (this.crop.paddy.irrigated_days || dry);
+			base_grow = this.irrigated ? irr : dry;
+
+			// Treat as a single growth stage so Speed-Gro/Agriculturist reductions still work.
+			stages = [base_grow];
+		}
+
 		if (this.fertilizer.id == "speed_gro" || this.fertilizer.id == "delux_speed_gro" || planner.player.agriculturist){
 			// [SOURCE: StardewValley.TerrainFeatures/HoeDirt.cs : function plant]
 			var rate = 0;
@@ -1429,17 +1447,17 @@ function planner_controller($scope){
 					rate = 0.25;
 					break;
 			}
-			
+
 			// Agriculturist profession (ID 5)
 			if (planner.player.agriculturist) rate += 0.1;
-			
+
 			// Days to remove
-			var remove_days = Math.ceil(this.crop.grow * rate);
-			
+			var remove_days = Math.ceil(base_grow * rate);
+
 			// For removing more than one day from larger stages of growth
 			// when there are still days to remove
 			var multi_remove = 0;
-			
+
 			// Remove days from stages
 			while (remove_days > 0 && multi_remove < 3){
 				for (var i = 0; i < stages.length; i++){
@@ -1447,20 +1465,20 @@ function planner_controller($scope){
 						stages[i] -= 1;
 						remove_days--;
 					}
-					
+
 					if (remove_days <= 0) break;
 				}
-				
+
 				multi_remove++;
 			}
 		}
-		
+
 		// Add up days of growth
 		var days = 0;
 		for (var i = 0; i < stages.length; i++){
 			days += stages[i];
 		}
-		
+
 		return days;
 	};
 	
