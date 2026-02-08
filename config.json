@@ -791,7 +791,7 @@
 				20
 			],
 			"regrow": 1,
-			"note": "Matures in 20 days. Produces 1 Tea Leaves each day on days 22\u201328 of Spring/Summer/Fall (and Winter if indoors).",
+			"note": "Matures in 20 days. Produces 1 Tea Leaves each day on days 22–28 of Spring/Summer/Fall (and Winter if indoors).",
 			"harvest": {}
 		},
 		{
@@ -1153,5 +1153,6 @@
 				"name": "Clint"
 			}
 		]
-	}
+	},
+	"updated_at": "2026-02-08"
 }
