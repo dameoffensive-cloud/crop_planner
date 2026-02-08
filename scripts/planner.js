@@ -1413,7 +1413,8 @@ function planner_controller($scope){
 		self.crop = {};
 		self.amount = 1;
 		self.fertilizer = planner.fertilizer["none"];
-		self.harvests = [];
+		
+		self.irrigated = false;self.harvests = [];
 		self.greenhouse = false;
 		
 		
@@ -1427,6 +1428,7 @@ function planner_controller($scope){
 			self.amount = data.amount;
 			if (data.fertilizer && planner.fertilizer[data.fertilizer])
 				self.fertilizer = planner.fertilizer[data.fertilizer];
+			if (data && data.irrigated) self.irrigated = true;
 			self.greenhouse = in_greenhouse ? true : false;
 		}
 	}
@@ -1437,11 +1439,20 @@ function planner_controller($scope){
 		data.crop = this.crop.id;
 		data.amount = this.amount;
 		if (this.fertilizer && !this.fertilizer.is_none()) data.fertilizer = this.fertilizer.id;
+		if (this.irrigated) data.irrigated = true;
 		return data;
 	};
 	
 	Plan.prototype.get_grow_time = function(){
 	var stages = $.extend([], this.crop.stages);
+
+	// Irrigated paddies (near water): available on Farm or Ginger Island (not Greenhouse)
+	// Rice Shoots: 8 days (6 when irrigated). Taro Tubers: 10 days (7 when irrigated).
+	var remove_days = 0;
+	if (this.irrigated && planner.cmode != "greenhouse"){
+		if (this.crop.id == "rice_shoot") remove_days += 2;
+		else if (this.crop.id == "taro_tuber") remove_days += 3;
+	}
 
 	// Data-driven fertilizer growth rate (supports any speed fertilizer in config.json)
 	var rate = 0;
@@ -1453,14 +1464,11 @@ function planner_controller($scope){
 	if (planner.player.agriculturist) rate += 0.1;
 
 	if (rate > 0){
-		// Days to remove
-		var remove_days = Math.ceil(this.crop.grow * rate);
+		remove_days += Math.ceil(this.crop.grow * rate);
+	}
 
-		// For removing more than one day from larger stages of growth
-		// when there are still days to remove
+	if (remove_days > 0){
 		var multi_remove = 0;
-
-		// Remove days from stages
 		while (remove_days > 0 && multi_remove < 3){
 			for (var i = 0; i < stages.length; i++){
 				if (i > 0 || stages[i] > 1){
@@ -1473,7 +1481,6 @@ function planner_controller($scope){
 		}
 	}
 
-	// Add up days of growth
 	var days = 0;
 	for (var j = 0; j < stages.length; j++){
 		days += stages[j];
