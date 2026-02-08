@@ -171,7 +171,8 @@
 			],
 			"regrow": 3,
 			"greenhouse_only": true,
-			"note": "Can only be grown indoors (Greenhouse/Garden Pot). Takes 12 days to mature, then produces fruit every 3 days."
+			"note": "Can only be grown indoors (Greenhouse/Garden Pot). Takes 12 days to mature, then produces fruit every 3 days.",
+			"harvest": {}
 		},
 		{
 			"buy": 15,
@@ -638,7 +639,8 @@
 				3
 			],
 			"regrow": 0,
-			"note": "Base growth 8 days (6 if irrigated/near water). Planner assumes 8 days."
+			"note": "Base growth 8 days (6 if irrigated/near water). Planner assumes 8 days.",
+			"harvest": {}
 		},
 		{
 			"buy": 400,
@@ -771,7 +773,8 @@
 				4
 			],
 			"regrow": 0,
-			"note": "Base growth 10 days (7 if irrigated/near water). Summer in the Valley; all seasons on Ginger Island. Planner assumes 10 days."
+			"note": "Base growth 10 days (7 if irrigated/near water). Summer in the Valley; all seasons on Ginger Island. Planner assumes 10 days.",
+			"harvest": {}
 		},
 		{
 			"id": "tea_sapling",
@@ -788,7 +791,8 @@
 				20
 			],
 			"regrow": 1,
-			"note": "Matures in 20 days. Produces 1 Tea Leaves each day on days 22–28 of Spring/Summer/Fall (and Winter if indoors)."
+			"note": "Matures in 20 days. Produces 1 Tea Leaves each day on days 22–28 of Spring/Summer/Fall (and Winter if indoors).",
+			"harvest": {}
 		},
 		{
 			"buy": 50,
