@@ -17,7 +17,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
 	
 	<script src="scripts/checklist-model.js"></script>	
-	<script src="scripts/planner.js"></script>
+	<script src="scripts/planner.js?v=20260208161950"></script>
 </head>
 <body ng-app="planner_app" ng-controller="planner_controller as self" ng-class="{'sidebar_open': self.sidebar.mode != ''}">
 	
@@ -413,6 +413,7 @@
 								<b>Fertilizer</b><br>
 								<select class="form-control" ng-model="self.newplan.fertilizer" ng-options="fert as fert.name for fert in self.config.fertilizer track by fert.id">
 								</select>
+							
 								<div class="checkbox" style="margin-top:8px;" ng-if="self.cmode != 'greenhouse'">
 									<label>
 										<input type="checkbox" ng-model="self.newplan.irrigated">
