@@ -80,3 +80,20 @@
   .rotate-hint { display: block; }
 }
 
+
+
+/* --- Mobile landscape: keep calendar in 7 proper columns --- */
+@media (max-width: 768px) and (orientation: landscape) {
+  .calendar .day_name,
+  .calendar .day {
+    width: 14.2857% !important; /* 100 / 7 */
+    float: left !important;
+  }
+
+  .calendar .day_names,
+  .calendar .day_container {
+    width: 100% !important;
+    overflow: hidden;
+  }
+}
+
