@@ -57,7 +57,8 @@ function planner_controller($scope){
 	
 	self.cdate;							// Current date to add plan to
 	self.cseason;						// Current season
-	self.cmode = "farm";				// Current farm mode (farm / greenhouse)
+	self.cmode = "farm";
+	self.view_mode = "all";				// Current farm mode (farm / greenhouse)
 	self.cyear;							// Current year
 	
 	self.newplan;
@@ -560,13 +561,21 @@ $scope.$apply();
 		if (!self.cyear) return [];
 		var a = (self.cyear.data.farm && self.cyear.data.farm.plans[date]) ? self.cyear.data.farm.plans[date] : [];
 		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.plans[date]) ? self.cyear.data.greenhouse.plans[date] : [];
-		return a.concat(b);
+		var all = a.concat(b);
+		var view = self.view_mode || "all";
+		if (view === "all") return all;
+		// Legacy plans may not have a location; treat as farm
+		return all.filter(function(p){ return (p.location || "farm") === view; });
 	}
 	function calendar_harvests(date){
 		if (!self.cyear) return [];
 		var a = (self.cyear.data.farm && self.cyear.data.farm.harvests[date]) ? self.cyear.data.farm.harvests[date] : [];
 		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.harvests[date]) ? self.cyear.data.greenhouse.harvests[date] : [];
-		return a.concat(b);
+		var all = a.concat(b);
+		var view = self.view_mode || "all";
+		if (view === "all") return all;
+		// Legacy plans may not have a location; treat as farm
+		return all.filter(function(p){ return (p.location || "farm") === view; });
 	}
 	function calendar_totals_day(date){
 		var fin = new Finance;
@@ -589,11 +598,15 @@ $scope.$apply();
 	
 	// Toggle current farm mode
 	function toggle_mode(){
-		if (self.cmode == "farm"){
-			set_mode("greenhouse");
-		} else {
-			set_mode("farm");
-		}
+		// Cycle calendar view: all -> farm -> greenhouse -> ginger island -> all
+		var order = ["all", "farm", "greenhouse", "island"];
+		var cur = self.view_mode || "all";
+		var idx = order.indexOf(cur);
+		if (idx < 0) idx = 0;
+		self.view_mode = order[(idx + 1) % order.length];
+		// Keep planting mode sensible: when viewing "all", default to farm planting rules
+		if (self.view_mode === "all") set_mode("farm");
+		else set_mode(self.view_mode);
 	}
 	
 	// Set current farm mode
