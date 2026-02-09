@@ -156,60 +156,23 @@
 }
 
 
-/* Ko-fi support button */
-.kofi-button {
-  background: #00b9fe;
-  color: #fff !important;
-  font-size: 18px;
-  font-weight: bold;
-  border-radius: 8px;
+/* Support footer */
+.support-footer {
+  margin-top: 32px;
+  padding: 16px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  text-align: center;
+  font-size: 14px;
+  color: #444;
 }
 
-.kofi-button:hover {
-  background: #009fd6;
+.support-footer .support-text {
+  margin-bottom: 10px;
+  line-height: 1.4;
 }
 
-
-/* Hide Ko-fi's default floating widget button (we use our own right-hand menu button) */
-.kofi-floating-button,
-.kofi-floating-btn,
-.kofi-widget-overlay .floatingchat-container,
-.kofi-widget-overlay .floatingchat-donate-button,
-.kofi-widget-overlay .floatingchat-button {
-  display: none !important;
+@media (max-width: 768px) {
+  .support-footer {
+    font-size: 13px;
+  }
 }
-
-#kofi-widget-overlay .floatingchat-donate-button,
-#kofi-widget-overlay .floatingchat-button,
-#kofi-widget-overlay .floatingchat-container,
-#kofi-widget-overlay .floatingchat-closed {
-  display: none !important;
-}
-
-
-
-/* Ko-fi: hide ONLY the floating button container; keep popup iframe usable via kofiWidgetOverlay.open() */
-iframe[id^="kofi-wo-container"],
-.floatingchat-container-wrap,
-.floatingchat-container-wrap-mobi {
-  display: none !important;
-}
-
-
-
-/* Ko-fi: ensure overlay panel can appear (previous overrides may have hidden it) */
-iframe[id^="kofi-wo-container"] {
-  display: block !important;
-}
-
-/* Show wrapper containers (panel uses them), but hide only the floating donate button */
-.floatingchat-container-wrap,
-.floatingchat-container-wrap-mobi {
-  display: block !important;
-}
-
-.floatingchat-donate-button,
-.floatingchat-button {
-  display: none !important;
-}
-
