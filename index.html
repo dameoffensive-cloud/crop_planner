@@ -458,7 +458,7 @@
 									<thead>
 										<tr>
 											<th colspan="2">Crop</th>
-											<th>Amount</th>
+<th>Amount</th>
 											<th>Loc</th>
 											<th>Fertilizer</th>
 											<th>Cost</th>
@@ -526,8 +526,10 @@
 											<td width="1">
 												<img ng-src="{{harvest.crop.get_image()}}">
 											</td>
-											<td>{{harvest.crop.name}}</td>
 											<td>
+											{{harvest.crop.name}} <span class="loc_inline">({{harvest.plan.get_location_short()}})</span>
+										</td>
+<td>
 												<span ng-show="harvest.yield.min==harvest.yield.max">x{{harvest.yield.min}}</span>
 												<span ng-show="harvest.yield.min!=harvest.yield.max">
 													x{{harvest.yield.min}}
