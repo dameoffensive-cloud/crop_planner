@@ -186,3 +186,12 @@
   display: none !important;
 }
 
+
+
+/* Ko-fi: hide ONLY the floating button container; keep popup iframe usable via kofiWidgetOverlay.open() */
+iframe[id^="kofi-wo-container"],
+.floatingchat-container-wrap,
+.floatingchat-container-wrap-mobi {
+  display: none !important;
+}
+
