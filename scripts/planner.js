@@ -58,6 +58,7 @@ function planner_controller($scope){
 	self.cdate;							// Current date to add plan to
 	self.cseason;						// Current season
 	self.cmode = "farm";				// Current farm mode (farm / greenhouse)
+	self.cview = "all";				// Current view mode (all / farm / greenhouse / island)
 	self.cyear;							// Current year
 	
 	self.newplan;
@@ -79,7 +80,10 @@ function planner_controller($scope){
 	self.set_season = set_season;		// Set current season
 	self.cfarm = cfarm;					// Get current farm
 	self.in_greenhouse = in_greenhouse; // Check if current farm mode == greenhouse
-	self.toggle_mode = toggle_mode;		// Toggle current farm mode (farm / greenhouse)
+	self.toggle_mode = toggle_mode;
+	self.view_image = view_image;
+	self.view_label = view_label;
+		// Toggle current farm mode (farm / greenhouse)
 	self.set_mode = set_mode;			// Set current farm mode (farm / greenhouse)
 	
 	self.get_season = get_season;		// Get season object by id
@@ -560,14 +564,26 @@ $scope.$apply();
 		if (!self.cyear) return [];
 		var a = (self.cyear.data.farm && self.cyear.data.farm.plans[date]) ? self.cyear.data.farm.plans[date] : [];
 		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.plans[date]) ? self.cyear.data.greenhouse.plans[date] : [];
-		return a.concat(b);
+		var all = a.concat(b);
+		if (self.cview == "all") return all;
+		return all.filter(function(p){
+			var loc = p.location || "farm";
+			return loc == self.cview;
+		});
 	}
+
 	function calendar_harvests(date){
 		if (!self.cyear) return [];
 		var a = (self.cyear.data.farm && self.cyear.data.farm.harvests[date]) ? self.cyear.data.farm.harvests[date] : [];
 		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.harvests[date]) ? self.cyear.data.greenhouse.harvests[date] : [];
-		return a.concat(b);
+		var all = a.concat(b);
+		if (self.cview == "all") return all;
+		return all.filter(function(h){
+			var loc = h.location || "farm";
+			return loc == self.cview;
+		});
 	}
+
 	function calendar_totals_day(date){
 		var fin = new Finance;
 		var a = (self.cyear.data.farm && self.cyear.data.farm.totals && self.cyear.data.farm.totals.day[date]) ? self.cyear.data.farm.totals.day[date] : null;
@@ -583,18 +599,35 @@ $scope.$apply();
 
 	
 	// Check if current farm mode is greenhouse
-	function in_greenhouse(){
+	
+	// Get current view image (for top-left button)
+	function view_image(){
+		if (self.cview == "island") return "images/ginger_island.png";
+		if (self.cview == "greenhouse") return "images/greenhouse.png";
+		// farm or all
+		return "images/scarecrow.png";
+	}
+	// Get current view label
+	function view_label(){
+		if (self.cview == "all") return "all farms";
+		if (self.cview == "farm") return "main farm";
+		if (self.cview == "greenhouse") return "greenhouse";
+		if (self.cview == "island") return "ginger island";
+		return "";
+	}
+
+function in_greenhouse(){
 		return self.cmode != "farm";
 	}
 	
 	// Toggle current farm mode
 	function toggle_mode(){
-		if (self.cmode == "farm"){
-			set_mode("greenhouse");
-		} else {
-			set_mode("farm");
-		}
+		var order = ["all","farm","greenhouse","island"];
+		var idx = order.indexOf(self.cview);
+		if (idx < 0) idx = 0;
+		self.cview = order[(idx + 1) % order.length];
 	}
+
 	
 	// Set current farm mode
 	function set_mode(mode){
