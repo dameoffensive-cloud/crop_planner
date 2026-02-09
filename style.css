@@ -168,3 +168,21 @@
 .kofi-button:hover {
   background: #009fd6;
 }
+
+
+/* Hide Ko-fi's default floating widget button (we use our own right-hand menu button) */
+.kofi-floating-button,
+.kofi-floating-btn,
+.kofi-widget-overlay .floatingchat-container,
+.kofi-widget-overlay .floatingchat-donate-button,
+.kofi-widget-overlay .floatingchat-button {
+  display: none !important;
+}
+
+#kofi-widget-overlay .floatingchat-donate-button,
+#kofi-widget-overlay .floatingchat-button,
+#kofi-widget-overlay .floatingchat-container,
+#kofi-widget-overlay .floatingchat-closed {
+  display: none !important;
+}
+
