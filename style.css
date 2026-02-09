@@ -195,3 +195,21 @@ iframe[id^="kofi-wo-container"],
   display: none !important;
 }
 
+
+
+/* Ko-fi: ensure overlay panel can appear (previous overrides may have hidden it) */
+iframe[id^="kofi-wo-container"] {
+  display: block !important;
+}
+
+/* Show wrapper containers (panel uses them), but hide only the floating donate button */
+.floatingchat-container-wrap,
+.floatingchat-container-wrap-mobi {
+  display: block !important;
+}
+
+.floatingchat-donate-button,
+.floatingchat-button {
+  display: none !important;
+}
+
