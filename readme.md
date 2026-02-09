@@ -8,7 +8,6 @@ This project is a **fork and extension** of the original crop planner created by
 
 **TL;DR:**  
 A Stardew Valley **1.6–compatible** crop planner with location-aware planting, harvest tracking, and a unified calendar view.
-If something looks out of date, try a hard refresh (Ctrl + Shift + R).
 
 ## 🔗 Live Version
 
