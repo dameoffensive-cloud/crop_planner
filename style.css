@@ -8,3 +8,20 @@
   image-rendering: pixelated;
   vertical-align: middle;
 }
+
+
+/* Ensure Plant / Auto-Plant buttons stay right-aligned in menu */
+#menu {
+  display: flex;
+  align-items: center;
+}
+
+#menu .menu-left {
+  flex: 1;
+}
+
+#menu .menu-right {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
