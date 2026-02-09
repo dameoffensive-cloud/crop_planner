@@ -145,3 +145,13 @@ While every effort is made to keep data accurate, game updates or edge cases may
 - If you reuse or fork this version:
   - Please continue to credit **exnil** for the original project
   - Do not imply official endorsement by ConcernedApe
+
+---
+
+### ☕ Support the project
+
+This tool was built with care, curiosity, and a little help from ChatGPT.  
+If it helped you plan a better farm, consider tossing a coin here:
+
+https://ko-fi.com/dameoffensive
+
