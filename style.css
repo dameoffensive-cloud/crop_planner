@@ -25,3 +25,13 @@
   display: flex;
   gap: 6px;
 }
+
+
+/* Right-justify Plant / Autoplant buttons inside the Plant Crop modal */
+.plant_crop .col-md-3.col-xs-4 {
+  text-align: right;
+}
+.plant_crop .col-md-3.col-xs-4 .btn {
+  display: inline-block;
+  margin-left: 6px;
+}
