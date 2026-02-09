@@ -172,6 +172,7 @@
 							<div class="harvesting">
 								<div class="plan" ng-repeat="harvest in self.calendar_harvests(date) | limitTo:4">
 									<img ng-src="{{harvest.crop.get_image()}}">
+										<div class="loc_badge" title="{{harvest.plan.get_location_label()}}">{{harvest.plan.get_location_short()}}</div>
 									<div class="amount">x{{harvest.yield.min}}</div>
 								</div>
 							</div>
