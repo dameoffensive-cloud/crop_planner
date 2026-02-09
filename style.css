@@ -97,3 +97,20 @@
   }
 }
 
+
+
+/* --- Mobile landscape override (undo 2-column mobile calendar) --- */
+@media only screen and (max-width: 767px) and (orientation: landscape) {
+  #calendar .day_names .day_name,
+  #calendar .day_container .day {
+    width: 14.28571429% !important;
+    float: left !important;
+  }
+
+  /* Undo the mobile padding that assumes 2-column layout */
+  #calendar .day_container .day {
+    padding-top: 4px !important;
+    height: 120px; /* slightly shorter for small screens */
+  }
+}
+
