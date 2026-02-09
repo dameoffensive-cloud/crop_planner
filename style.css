@@ -154,3 +154,17 @@
   .calendar { display: none; }
   .rotate-hint { display: block; }
 }
+
+
+/* Ko-fi support button */
+.kofi-button {
+  background: #00b9fe;
+  color: #fff !important;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+.kofi-button:hover {
+  background: #009fd6;
+}
