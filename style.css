@@ -35,3 +35,13 @@
   display: inline-block;
   margin-left: 6px;
 }
+
+
+/* Keep Plant/Autoplant aligned to the right in the Plant Crop modal */
+.plant_crop .plant-actions {
+  text-align: right;
+}
+.plant_crop .plant-actions .btn {
+  display: inline-block;
+  margin-left: 6px;
+}
