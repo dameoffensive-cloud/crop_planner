@@ -1,89 +1,147 @@
-# Stardew Valley Crop Planner
+# Stardew Valley Crop Planner (v1.6 Compatible)
 
-A tool for planning crop schedules in the Stardew Valley game.
+This is an **unofficial, fan-made Stardew Valley crop planner** updated to support **Stardew Valley v1.6** and later, with expanded functionality for modern gameplay (including Ginger Island, location-aware planning, and updated crop data).
 
-#### **<a href="http://exnil.github.io/crop_planner/">Live version on github.io</a>**
-
-<a href="https://www.reddit.com/r/StardewValley/comments/55puw1/crop_planner_v2_released_multiple_years_importing/" target="_blank">Reddit thread</a>
+This project is a **fork and extension** of the original crop planner created by **exnil**, with additional features, fixes, and quality-of-life improvements layered on top.
 
 ---
 
-### New in v2
+**TL;DR:**  
+A Stardew Valley **1.6–compatible** crop planner with location-aware planting, harvest tracking, and a unified calendar view.
 
-* Multiple year planning
-* Import/export plans
-* Import existing plans from the old v1 planner
- * (only works if old plans are on the same browser)
-* Greenhouse plans separated from outdoor Farm plans
-* Improved planner design
-* Slightly improved responsive design for mobile devices
-* Crop info and Settings moved to pop-out sidebar
-* Improved Crop Info panel
-* More settings
-* More seasonal statistics
-* A few keyboard shortcuts:
- * Left/Right arrows = navigate seasons
- * ESC = open/close sidebar (opens to crop info)
- * ~ (tilde) = toggle between outdoor farm/greenhouse
+## 🔗 Live Version
 
-I'll be leaving <a href="http://exnil.github.io/crop_planner/v1/" target="_blank">v1 of the planner</a> up for anyone who's interested in accessing it, though I won't be updating it any further so it will only ever be up to date with Stardew Valley v1.07.
+The active build is available here:  
+https://dameoffensive-cloud.github.io/crop_planner/
 
 ---
 
-### Crop Info
-Crop info is stored in config.json. This data is retrieved from game files in *[install dir]/Content/Data/*, specifically Crops.xnb and ObjectInformation.xnb. I use <a href="https://github.com/Draivin/XNBNode" target="_blank">XNBNode by Draivin</a> to decompress these files and parse them with a Python script to save into the config.json file.
+## 🎮 Stardew Valley Version Support
+
+- **Target version:** Stardew Valley **1.6**
+- Includes support for:
+  - Ginger Island farming
+  - Updated festivals, birthdays, and events
+  - Modern crop behavior and mechanics
+  - Location-aware planting and harvesting
+
+This planner is designed to reflect **current game mechanics**, not legacy versions.
 
 ---
 
-### Development Utilities
-If you are interested in contributing to the Crop Planner, I have included some Python utility scripts that I use in my development workflow. These are located in *./utils/*, and require Python 3 to run. Each script has its own dependencies:
+## ✨ What’s New / Different in This Fork
 
-* <b>update-config.py</b> - Updates crop data in config.json using data from decompiled game files
- * Dependencies:
- * Stardew Valley
- * <a href="https://github.com/Draivin/XNBNode" target="_blank">XNBNode</a>
- * xcompress32.dll (proprietary dll required by XNBNode, place in XNBNode folder)
-* <b>watch-less.py</b> - Watches style.less for changes and recompiles CSS using Less CSS
- * Dependencies:
- * less (Less CSS)
- * less-plugin-clean-css (for minifying the resulting CSS)
- * <a href="http://lesscss.org/usage/#command-line-usage" target="_blank">Install with npm</a>
+Compared to the original planner, this version adds:
 
----
+- **Location-aware planning**
+  - Main Farm, Greenhouse, and Ginger Island are treated as distinct locations
+  - Crops and harvests visually indicate *where* they are planted
+- **Unified calendar view**
+  - View all locations together or filter by location
+- **Harvest location indicators**
+  - Harvests now display the same farm/greenhouse/island markers as plantings
+- **Updated 1.6 data**
+  - Crops, events, and mechanics updated to match Stardew Valley v1.6
+- **UI and usability improvements**
+  - Cleaner modal layouts
+  - Consistent icon sizing
+  - Improved visual alignment and readability
 
-### Item Prices
-All items have a **base price** which the game uses to calculate the sell price (when you ship items) and buy price (when you buy items from stores) of that item. Buy price is simply <code>Base Price * 2</code>.
-
-The calculation for sell price of an item (without added Profession bonuses) is below. The Quality of an item is used numerically as a multiplier: 0 for regular; 1 for silver; 2 for gold.
-<pre>
-(int) Sell Price = Base Price * (1 + (Quality * 0.25))
-</pre>
-
-*Note: some items have sell/buy prices that deviate from the above formulas. These prices are likely hard-coded into the game.*
+The goal of this fork is to remain **visually familiar** while being **mechanically current** and more informative.
 
 ---
 
-### Profit-per-day
-Crop profits-per-day are calculated using the <b><i>minimum sell price</i></b> of a crop.<br>
-Profit per day: <code>((Total Yields * Sells For) - (Seed Price * Total Plantings)) / (Final Harvest Date - 1)</code>
+## 🧭 How to Use
 
-<b>Example 1 - Parsnip</b><br>
-Parsnips take 4 days to grow after the day they are planted. In Spring, they can be planted 6 times and yield a total of 6 Parsnips, assuming replanting occurs on the same day of harvesting. The last harvest occurs on Day 25. Seeds cost 20g, and Parsnips sell for a minimum of 35g.
-<pre>
-((6 * 35g) - (20g * 6)) / (25 - 1)
-90g / 24
-<b>= 3.75g/day</b>
-</pre>
+1. **Select a date** on the calendar  
+   Click any day to open the planting/harvesting planner for that date.
 
+2. **Add a crop**
+   - Choose the crop
+   - Set the amount
+   - Select the location (Farm, Greenhouse, or Ginger Island)
+   - Optional: fertilizer, irrigation (where applicable)
 
-<b>Example 2 - Corn</b><br>
-Corn takes 14 days to grow after the day it is planted. In Spring and Fall, it is planted once and can yield a total of 11 Corn. The last harvest occurs on Day 55. Seeds cost 150g, and Corn sells for a minimum of 50g.
-<pre>
-((11 * 50g) - (150g * 1)) / (55 - 1)
-400g / 54
-<b>= 7.4g/day</b>
-</pre>
+3. **Use Auto-Plant**
+   - Auto-Plant will automatically replant crops on their harvest day when possible
+   - Useful for repeatable crops and long planning windows
+
+4. **Switch views**
+   - Use the top-left view button to cycle between:
+     - All Farms
+     - Main Farm only
+     - Greenhouse only
+     - Ginger Island only
+   - This affects visibility, not where crops are planted
+
+5. **Read the calendar**
+   - Seed icons show planting days
+   - Harvest icons show harvest days
+   - Location badges (F / G / I) indicate *where* each crop or harvest occurs
+   - Daily gold totals reflect planting costs and harvest revenue
+
+This tool is meant for **planning and comparison**, not perfect simulation.
 
 ---
 
-<i>All copyrighted content (images, textures, etc.) belong to their respective owners (ConcernedApe / Stardew Valley) and are not included under the MIT license of this project.</i>
+## ⚠️ Known Limitations
+
+This planner intentionally prioritizes clarity over absolute simulation accuracy.
+
+Some known limitations include:
+
+- **Modded crops and content**
+  - Mods are not supported unless manually added to the data files
+- **Future updates**
+  - Stardew Valley updates may introduce mechanics not yet reflected here
+
+If something looks wrong, it’s probably wrong, so feedback is always welcome.
+
+---
+
+## 🙏 Credits & Attribution
+
+### Original Crop Planner
+- **Created by:** exnil  
+- **Original repository:** https://github.com/exnil/crop_planner  
+- This project would not exist without the original work; all credit for the foundational structure and design belongs to exnil.
+
+### Stardew Valley
+- **Game created by:** ConcernedApe (Eric Barone)  
+- Stardew Valley and all related assets, names, and mechanics are the intellectual property of ConcernedApe.
+
+### This Fork
+- Maintained and extended by DameOffensive  
+- All additions are provided as a **fan-made enhancement**, not an official tool
+
+---
+
+## 📣 Feedback, Updates, & Suggestions
+
+Have an idea, spotted an inconsistency, or want to suggest an update?
+
+**Contact #DameOffensive7308 on Discord** for update suggestions and feedback.
+
+Community input helps keep this tool useful, current, and fun.
+
+---
+
+## ⚠️ Disclaimer
+
+This project is:
+
+- **Unofficial**
+- **Not affiliated with or endorsed by ConcernedApe**
+- Provided “as-is” for planning and reference purposes
+
+While every effort is made to keep data accurate, game updates or edge cases may cause discrepancies.
+
+---
+
+## 📜 License & Usage
+
+- Original code structure and concepts remain under the original project’s license
+- Modifications in this fork are provided for **personal and community use**
+- If you reuse or fork this version:
+  - Please continue to credit **exnil** for the original project
+  - Do not imply official endorsement by ConcernedApe
