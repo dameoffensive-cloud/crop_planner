@@ -194,3 +194,39 @@
   color: #ffffff;
   text-decoration: underline;
 }
+
+
+/* --- Multi-event stacking (festivals + birthdays on same day) --- */
+#calendar .day_container .day .date_top{
+  position: relative !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+#calendar .day_container .day .date_top .event{
+  position: relative !important;
+  display: block;
+  margin-top: 2px;
+}
+
+
+/* --- FIX: stack multiple events in the date header without overlapping crops --- */
+#calendar .day_container .day .date_top{
+  position: relative !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+#calendar .day_container .day .date_top .date{
+  position: static !important;
+  float: left;
+}
+#calendar .day_container .day .date_top .event{
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  display: block;
+  margin-left: 28px;
+  text-align: left !important;
+  width: auto !important;
+}
+

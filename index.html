@@ -67,6 +67,7 @@
 						<div class="btn btn-default" ng-click="self.toggle_mode()">
 							<img ng-src="{{self.view_image()}}">
 						</div>
+						
 					</div>
 					<div class="year_info">
 						<div class="yi_name">Year {{self.cyear.index+1}}, {{self.cseason.name}}</div>
@@ -153,9 +154,9 @@
 								<span class="visible-xs">{{self.get_date(date, '%j%S - %l')}}</span>
 								<span class="hidden-xs">{{date%self.SEASON_DAYS>0 && date%self.SEASON_DAYS || self.SEASON_DAYS}}</span>
 							</div>
-							<div class="event" ng-show="self.events[date] && self.player.settings.show_events" title="{{self.events[date].get_text()}}">
-								<img ng-src="{{self.events[date].get_image()}}">
-								<span>{{self.events[date].get_text()}}</span>
+							<div class="event" ng-repeat="ev in self.events[date] | orderBy:['!festival','name']" ng-show="self.player.settings.show_events" title="{{ev.get_text()}}">
+								<img ng-src="{{ev.get_image()}}">
+								<span>{{ev.get_text()}}</span>
 							</div>
 						</div>
 						
