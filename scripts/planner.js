@@ -179,7 +179,8 @@ function planner_controller($scope){
 					$.each(season, function(ii, c_event){
 						c_event.season = s_index;
 						c_event = new CalendarEvent(c_event);
-						self.events[c_event.date] = c_event;
+						if (!self.events[c_event.date]) self.events[c_event.date] = [];
+						self.events[c_event.date].push(c_event);
 					});
 				});
 				
@@ -602,11 +603,11 @@ $scope.$apply();
 	
 	// Get current view image (for top-left button)
 	function view_image(){
-		if (self.cview == "island") return "images/ginger_island.png";
-		if (self.cview == "greenhouse") return "images/greenhouse.png";
-		// farm or all
-		return "images/scarecrow.png";
-	}
+        if (self.cview == "all") return "images/all_farms.png";
+        if (self.cview == "island") return "images/ginger_island.png";
+        if (self.cview == "greenhouse") return "images/greenhouse.png";
+        return "images/scarecrow.png";
+    }
 	// Get current view label
 	function view_label(){
 		if (self.cview == "all") return "all farms";
