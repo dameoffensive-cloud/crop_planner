@@ -24,6 +24,8 @@ function round(num, decimals){
 	return Math.round(num * decimals) / decimals;
 }
 
+// checklist-model fallback (prevents app from failing to bootstrap if the directive file didn't load)
+try { angular.module('checklist-model'); } catch (e) { angular.module('checklist-model', []); }
 
 // Angular app
 angular.module("planner_app", ["checklist-model"])
@@ -90,6 +92,15 @@ function planner_controller($scope){
 	self.get_date = get_date;			// Get formatted date string
 	self.ci_set_sort = ci_set_sort;		// Set key to sort crop info by
 	self.planner_valid_crops = planner_valid_crops;
+	self.on_crop_change = on_crop_change;
+	self.select_crop_search = select_crop_search;
+	self.crop_search_blur = crop_search_blur;
+	self.ci_sort_icon = ci_sort_icon;
+	self.best_fit_crop = best_fit_crop;
+	self.best_fit_crops = best_fit_crops;
+	self.quick_plant = quick_plant;
+	self.suggest_crop = suggest_crop;
+	self.has_regrowth_on_day = has_regrowth_on_day;
 	
 	// Crop info search/filter settings
 	self.cinfo_settings = {
@@ -102,6 +113,13 @@ function planner_controller($scope){
 		order: false,
 		use_fbp: false,
 	};
+
+	// Crop search state (for the searchable modal picker)
+	self.crop_search_text = "";
+	self.crop_search_open = false;
+
+	// Legacy section toggle (Settings sidebar)
+	self.show_legacy = false;
 	
 	
 	/********************************
@@ -339,13 +357,17 @@ $scope.$apply();
 				// Update seasonal number of plantings
 				s_plant_total.plantings += plan.amount;
 				
-				// If first harvest of crop occurs after its
-				// growth season(s), continue $.each
+				// If first harvest of crop occurs after its growth season(s), continue $.each
+				// Fruit trees are special: they can be planted any season, but only produce in-season (year-round indoors).
+				if (crop.tree && !farm.greenhouse){
+					// Tree produces starting the later of: maturity date or the fruit season start.
+					first_harvest = Math.max(first_harvest, crop.start);
+				}
 				if (first_harvest > crop_end) return;
 				
 				// Initial harvest
 				var harvests = [];
-				harvests.push(new Harvest(plan, first_harvest));
+				harvests.push(new Harvest(plan, first_harvest, false, farm.year.index));
 				
 				// Regrowth harvests
 				if (crop.regrow){
@@ -353,7 +375,7 @@ $scope.$apply();
 					for (var i = 1; i <= regrowths; i++){
 						var regrow_date = first_harvest + (i * crop.regrow);
 						if (regrow_date > crop_end) break;
-						harvests.push(new Harvest(plan, regrow_date, true));
+						harvests.push(new Harvest(plan, regrow_date, true, farm.year.index));
 					}
 				}
 				
@@ -387,7 +409,89 @@ $scope.$apply();
 			});
 		});
 		
-		// Add up annual total
+		
+		// --- Fruit tree carry-over harvests (trees persist across years) ---
+		// Trees are planted once, mature after their grow time, and then continue producing in future years.
+		// We only add HARVEST revenue here (no planting costs / no planting counts), and only for trees planted in prior years.
+		(function add_prior_year_tree_harvests(){
+			var cy = farm.year.index;
+			if (cy <= 0) return; // no prior years
+
+			// Helper: determine if a plan belongs to this farm location set
+			function plan_matches_farm(p){
+				var loc = (p && p.location) ? p.location : (farm.greenhouse ? 'greenhouse' : 'farm');
+				if (farm.greenhouse) return (loc !== 'farm');
+				return (loc === 'farm');
+			}
+
+			for (var yi = 0; yi < cy; yi++){
+				var py = self.years[yi];
+				if (!py || !py.data) continue;
+
+				// Use the corresponding plan set (farm vs greenhouse)
+				var pf = farm.greenhouse ? py.data.greenhouse : py.data.farm;
+				if (!pf || !pf.plans) continue;
+
+				$.each(pf.plans, function(pdate, plans){
+					pdate = parseInt(pdate);
+					if (!plans || !plans.length) return;
+
+					$.each(plans, function(i, plan){
+						if (!plan || !plan.crop || !plan.crop.tree) return;
+						if (!plan_matches_farm(plan)) return;
+
+						var crop = plan.crop;
+						var grow_time = plan.get_grow_time();
+						var planting_global = (yi * YEAR_DAYS) + pdate;
+						var maturity_global = planting_global + grow_time;
+
+						// Determine production window within the CURRENT year
+						var year_start_global = (cy * YEAR_DAYS) + 1;
+						var year_end_global = year_start_global + YEAR_DAYS - 1;
+
+						var year_round = farm.greenhouse; // greenhouse + island are year-round
+						var window_start = year_round ? year_start_global : ((cy * YEAR_DAYS) + crop.start);
+						var window_end = year_round ? year_end_global : ((cy * YEAR_DAYS) + crop.end);
+
+						var first_harvest_global = Math.max(maturity_global, window_start);
+						if (first_harvest_global > window_end) return;
+
+						var reg = crop.regrow || 1;
+						var hcount = Math.floor((window_end - first_harvest_global) / reg);
+
+						for (var h = 0; h <= hcount; h++){
+							var h_global = first_harvest_global + (h * reg);
+							if (h_global < year_start_global || h_global > year_end_global) continue;
+
+							var h_local = h_global - (cy * YEAR_DAYS);
+							var harvest = new Harvest(plan, h_local, (h > 0), cy);
+
+							// Update harvests
+							if (!farm.harvests[h_local]) farm.harvests[h_local] = [];
+							farm.harvests[h_local].push(harvest);
+
+							// Update daily revenues from harvests
+							if (!farm.totals.day[h_local]) farm.totals.day[h_local] = new Finance;
+							var d_harvest = farm.totals.day[h_local];
+							d_harvest.profit.min += harvest.revenue.min;
+							d_harvest.profit.max += harvest.revenue.max;
+
+							// Update seasonal revenues from harvests
+							var h_season = Math.floor((h_local - 1) / SEASON_DAYS);
+							var s_harvest_total = farm.totals.season[h_season];
+							s_harvest_total.profit.min += harvest.revenue.min;
+							s_harvest_total.profit.max += harvest.revenue.max;
+
+							// Update seasonal number of harvests
+							s_harvest_total.harvests.min += harvest.yield.min;
+							s_harvest_total.harvests.max += harvest.yield.max;
+						}
+					});
+				});
+			}
+		})();
+
+// Add up annual total
 		for (var i = 0; i < farm.totals.seasons; i++){
 			var season = farm.totals.seasons[i];
 			var y_total = farm.totals.year;
@@ -408,7 +512,11 @@ $scope.$apply();
 		if (!validate_plan_amount()) return;
 		self.cyear.add_plan(self.newplan, date, auto_replant);
 		self.newplan = new Plan;
-	}
+		// Ensure Angular reflects changes immediately (tree plans previously sometimes required a manual refresh).
+		try { $scope.$applyAsync(); } catch (e) {}
+		try { update(self.cyear, true); } catch (e) {}
+		try { save_data(); } catch (e) {}
+		}
 	
 	// Add plan to plans list on enter keypress
 	function add_plan_key(date, e){
@@ -477,16 +585,50 @@ $scope.$apply();
 	
 	// Remove plans from current farm/season
 	function clear_season(season){
-		var full_update = self.cfarm().has_regrowing_crops(season);
-		for (var date = season.start; date <= season.end; date++){
-			self.cfarm().plans[date] = [];
+		// In All Farms view, clear the visible season from both farm and greenhouse buckets.
+		// In greenhouse-only view, clear the entire greenhouse year because greenhouse has no seasons.
+		if (self.cview == "all") {
+			for (var date = season.start; date <= season.end; date++){
+				self.cyear.data.farm.plans[date] = [];
+				self.cyear.data.greenhouse.plans[date] = [];
+			}
+			save_data();
+			update(self.cyear.data.farm, true);
+			update(self.cyear.data.greenhouse, true);
+			return;
+		}
+
+		var farm = self.cfarm();
+		
+		if (self.in_greenhouse()){
+			for (var date = self.cyear.start; date <= self.cyear.end; date++){
+				farm.plans[date] = [];
+			}
+		} else {
+			for (var date = season.start; date <= season.end; date++){
+				farm.plans[date] = [];
+			}
 		}
 		save_data();
-		update(self.cyear, full_update);
+		update(self.cyear, true);
 	}
 	
 	// Remove plans from current farm/year
 	function clear_year(year){
+		// In All Farms view, users expect this to clear both main farm and greenhouse/island data.
+		if (self.cview == "all") {
+			$.each(year.data.farm.plans, function(date, plans){
+				year.data.farm.plans[date] = [];
+			});
+			$.each(year.data.greenhouse.plans, function(date, plans){
+				year.data.greenhouse.plans[date] = [];
+			});
+			save_data();
+			update(year.data.farm, true);
+			update(year.data.greenhouse, true);
+			return;
+		}
+
 		var farm = year.farm();
 		var full_update = farm.has_regrowing_crops();
 		$.each(farm.plans, function(date, plans){
@@ -507,6 +649,8 @@ $scope.$apply();
 	
 	// Open crop planner modal
 	function open_plans(date){
+		self.crop_search_text = "";
+		self.crop_search_open = false;
 		self.planner_modal.modal();
 		self.cdate = date;
 	}
@@ -526,6 +670,9 @@ $scope.$apply();
 			if (!prev_year) return;
 			self.cyear = prev_year;
 		}
+		// Ensure the newly selected year is (re)computed so carry-over harvests render immediately
+		update(self.cyear.data.farm, true);
+		update(self.cyear.data.greenhouse, true);
 	}
 	
 	// Increment/decrement current season; creates new year if necessary
@@ -546,6 +693,9 @@ $scope.$apply();
 		}
 		
 		self.set_season(next_season);
+		// Ensure the newly selected year is (re)computed so carry-over harvests render immediately
+		update(self.cyear.data.farm, true);
+		update(self.cyear.data.greenhouse, true);
 	}
 	
 	// Set current season
@@ -580,17 +730,23 @@ $scope.$apply();
 		var all = a.concat(b);
 		if (self.cview == "all") return all;
 		return all.filter(function(h){
-			var loc = h.location || "farm";
+			var loc = (h.plan && h.plan.location) ? h.plan.location : "farm";
 			return loc == self.cview;
 		});
 	}
 
 	function calendar_totals_day(date){
 		var fin = new Finance;
-		var a = (self.cyear.data.farm && self.cyear.data.farm.totals && self.cyear.data.farm.totals.day[date]) ? self.cyear.data.farm.totals.day[date] : null;
-		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.totals && self.cyear.data.greenhouse.totals.day[date]) ? self.cyear.data.greenhouse.totals.day[date] : null;
-		fin.profit.min = (a ? a.profit.min : 0) + (b ? b.profit.min : 0);
-		fin.profit.max = (a ? a.profit.max : 0) + (b ? b.profit.max : 0);
+		var a = (self.cyear.data.farm && self.cyear.data.farm.totals && self.cyear.data.farm.totals.day && self.cyear.data.farm.totals.day[date]) ? self.cyear.data.farm.totals.day[date] : null;
+		var b = (self.cyear.data.greenhouse && self.cyear.data.greenhouse.totals && self.cyear.data.greenhouse.totals.day && self.cyear.data.greenhouse.totals.day[date]) ? self.cyear.data.greenhouse.totals.day[date] : null;
+
+		// Filter totals to match the active location view so greenhouse/island
+		// views don't bleed farm profit (and vice-versa) when the other location is empty.
+		var include_farm       = (self.cview === "all" || self.cview === "farm");
+		var include_greenhouse = (self.cview === "all" || self.cview === "greenhouse" || self.cview === "island");
+
+		fin.profit.min = (include_farm && a ? a.profit.min : 0) + (include_greenhouse && b ? b.profit.min : 0);
+		fin.profit.max = (include_farm && a ? a.profit.max : 0) + (include_greenhouse && b ? b.profit.max : 0);
 		return fin;
 	}
 
@@ -627,12 +783,25 @@ function in_greenhouse(){
 		var idx = order.indexOf(self.cview);
 		if (idx < 0) idx = 0;
 		self.cview = order[(idx + 1) % order.length];
+		// Keep cmode in sync (cmode drives growth rules + which farm bucket is active)
+		if (self.cview == "farm" || self.cview == "all") self.cmode = "farm";
+		else if (self.cview == "island") self.cmode = "island";
+		else self.cmode = "greenhouse";
+		// Recompute current year so view updates immediately
+		update(self.cyear.data.farm, true);
+		update(self.cyear.data.greenhouse, true);
 	}
 
 	
 	// Set current farm mode
 	function set_mode(mode){
 		self.cmode = mode;
+		// Keep view consistent when set directly
+		if (mode == "farm") self.cview = "farm";
+		else if (mode == "greenhouse") self.cview = "greenhouse";
+		else if (mode == "island") self.cview = "island";
+		update(self.cyear.data.farm, true);
+		update(self.cyear.data.greenhouse, true);
 	}
 	
 	////////////////////////////////
@@ -687,7 +856,13 @@ function in_greenhouse(){
 			self.cinfo_settings.order = false;
 		}
 	}
-	
+
+	// Return a sort direction indicator for a given column key
+	function ci_sort_icon(key){
+		if (self.cinfo_settings.sort !== key) return '';
+		return self.cinfo_settings.order ? ' ↑' : ' ↓';
+	}
+
 	// Filter crops that can be planted in the planner's drop down list
 	function planner_valid_crops(crop){
 		// Restrict special cases
@@ -698,8 +873,215 @@ function in_greenhouse(){
 		if (self.in_greenhouse()) return true;
 
 		// On farm, only allow crops that can grow in the current season.
+		if (crop.tree) return true;
+
+		// On farm, only allow crops that can grow in the current season.
 		return crop.can_grow(self.cseason, true);
 	}
+
+	// When crop selection changes in the modal, enforce tree rules.
+	function on_crop_change(){
+		self.newplan.irrigated = false;
+		var crop = self.crops[self.newplan.crop_id];
+		if (crop && crop.tree){
+			// Trees cannot use fertilizer in-game, force None and disable UI.
+			self.newplan.fertilizer = self.fertilizer["none"];
+		}
+	}
+
+	// Select a crop from the searchable picker in the planting modal
+	function select_crop_search(crop){
+		self.newplan.crop_id = crop.id;
+		self.crop_search_text = "";
+		self.crop_search_open = false;
+		self.on_crop_change();
+	}
+
+	// Close the crop search dropdown after a short delay (allows clicks to register first)
+	function crop_search_blur(){
+		setTimeout(function(){
+			self.crop_search_open = false;
+			$scope.$apply();
+		}, 200);
+	}
+
+	// Returns true if any harvest on the given date comes from a crop that regrows —
+	// meaning the plot is still actively producing and needs no new planting suggestion.
+	function has_regrowth_on_day(date){
+		var harvests = self.calendar_harvests(date);
+		for (var i = 0; i < harvests.length; i++){
+			if (harvests[i].crop && harvests[i].crop.regrow) return true;
+		}
+		return false;
+	}
+
+	// Return the most profitable non-regrowable crop that can complete its full growth cycle
+	// when planted on the given date. Uses crop.end (not season.end) as the deadline so that
+	// cross-season crops like Wheat (Summer+Fall) are correctly included when planted late in
+	// their first season. Regrowable crops are always excluded — suggesting one that won't
+	// regrow before season end is misleading, and suggesting one "over" a regrowable harvest
+	// makes no sense.
+	function best_fit_crop(date){
+		if (!self.cseason || !self.crops_list.length) return null;
+
+		var best = null;
+		var best_profit = -Infinity;
+
+		$.each(self.crops_list, function(i, crop){
+			// Cactus Seeds: greenhouse only
+			if (crop.id === "cactus_seeds" && self.cmode !== "greenhouse") return;
+
+			// Fruit trees: skip (28-day commitment, wrong tool for this)
+			if (crop.tree) return;
+
+			// Crops flagged no_suggest are event-only or otherwise not regularly obtainable
+			// (e.g. Qi Beans). Still plantable manually; just never auto-prompted.
+			if (crop.no_suggest) return;
+
+			// Regrowable crops: excluded — they won't meaningfully regrow before season end
+			// when planted on a late day, and suggesting them over an existing regrowable
+			// harvest is confusing (see: Corn, Coffee, Ancient Fruit, etc.)
+			if (crop.regrow) return;
+
+			// On farm, crop must be plantable in the current season or span into it
+			// (can_grow with is_season=true already passes cross-season crops correctly)
+			if (!self.in_greenhouse() && !crop.can_grow(self.cseason, true)) return;
+
+			// Deadline: last day the crop's seasons cover.
+			// This is season.end for single-season crops, and naturally extends to the
+			// following season's end for cross-season crops (e.g. Wheat: Summer+Fall → day 84).
+			// Greenhouse has no season expiry.
+			var deadline = self.in_greenhouse() ? (YEAR_DAYS * 10) : crop.end;
+
+			var grow_time = crop.grow;
+			if (planner.player.agriculturist){
+				grow_time = Math.max(1, grow_time - Math.ceil(grow_time * 0.1));
+			}
+
+			// The crop must finish growing on or before its deadline
+			if (date + grow_time > deadline) return;
+
+			if (crop.profit > best_profit){
+				best_profit = crop.profit;
+				best = crop;
+			}
+		});
+
+		return best;
+	}
+
+	// Return the top `limit` fitting crops sorted by profit descending.
+	// Uses identical eligibility rules to best_fit_crop.
+	function best_fit_crops(date, limit){
+		if (!self.cseason || !self.crops_list.length) return [];
+		limit = limit || 3;
+
+		var candidates = [];
+
+		$.each(self.crops_list, function(i, crop){
+			if (crop.id === "cactus_seeds" && self.cmode !== "greenhouse") return;
+			if (crop.tree) return;
+			if (crop.no_suggest) return;
+			if (crop.regrow) return;
+			if (!self.in_greenhouse() && !crop.can_grow(self.cseason, true)) return;
+
+			var deadline = self.in_greenhouse() ? (YEAR_DAYS * 10) : crop.end;
+			var grow_time = crop.grow;
+			if (planner.player.agriculturist){
+				grow_time = Math.max(1, grow_time - Math.ceil(grow_time * 0.1));
+			}
+			if (date + grow_time > deadline) return;
+
+			candidates.push(crop);
+		});
+
+		candidates.sort(function(a, b){ return b.profit - a.profit; });
+		return candidates.slice(0, limit);
+	}
+
+	// Pre-fill the newplan form with a suggested crop (including inherited fertilizer).
+	// Does NOT plant — leaves the user in control of amount, location, and final submit.
+	function suggest_crop(crop, date){
+		self.newplan.crop_id = crop.id;
+		self.newplan.crop = crop;
+		self.on_crop_change();
+
+		// Inherit best fertilizer from today's harvests (same logic as quick_plant)
+		var fert_rank = {
+			"deluxe_fertilizer": 6,
+			"quality_fertilizer": 5,
+			"basic_fertilizer":   4,
+			"hyper_speed_gro":    3,
+			"deluxe_speed_gro":   2,
+			"speed_gro":          1,
+			"none":               0
+		};
+		var inherited_fert = self.fertilizer["none"];
+		var best_rank = 0;
+		$.each(self.calendar_harvests(date), function(i, harvest){
+			var f = harvest.plan && harvest.plan.fertilizer;
+			if (!f || f.is_none()) return;
+			var rank = fert_rank[f.id] || 0;
+			if (rank > best_rank){
+				best_rank = rank;
+				inherited_fert = f;
+			}
+		});
+		if (!self.newplan.crop || !self.newplan.crop.tree){
+			self.newplan.fertilizer = inherited_fert;
+		}
+
+		// Scroll the modal body to the Plant Crop form so the pre-fill is visible
+		try {
+			var modal = document.getElementById("crop_planner");
+			if (modal) modal.querySelector(".modal-body").scrollTop = 0;
+		} catch(e){}
+	}
+	// Called from the calendar cell prompt; stopPropagation prevents the day modal opening.
+	function quick_plant(date, event){
+		if (event) event.stopPropagation();
+
+		var crop = best_fit_crop(date);
+		if (!crop) return;
+
+		// Inherit the best fertilizer from the crops being harvested today.
+		// In Stardew, fertilizer stays in the soil after harvest, so the next crop on that
+		// plot starts with it already applied. We rank: deluxe > quality > basic >
+		// hyper_speed > deluxe_speed > speed_gro > none, and pick the highest available.
+		var fert_rank = {
+			"deluxe_fertilizer": 6,
+			"quality_fertilizer": 5,
+			"basic_fertilizer":   4,
+			"hyper_speed_gro":    3,
+			"deluxe_speed_gro":   2,
+			"speed_gro":          1,
+			"none":               0
+		};
+		var inherited_fert = self.fertilizer["none"];
+		var best_rank = 0;
+		$.each(self.calendar_harvests(date), function(i, harvest){
+			var f = harvest.plan && harvest.plan.fertilizer;
+			if (!f || f.is_none()) return;
+			var rank = fert_rank[f.id] || 0;
+			if (rank > best_rank){
+				best_rank = rank;
+				inherited_fert = f;
+			}
+		});
+
+		// Build and add the plan
+		self.newplan = new Plan();
+		self.newplan.crop_id = crop.id;
+		self.newplan.crop = crop;
+		self.newplan.amount = 1;
+		self.newplan.fertilizer = inherited_fert;
+
+		self.cyear.add_plan(self.newplan, date, false);
+		self.newplan = new Plan();
+		update(self.cyear, true);
+		save_data();
+	}
+
 	
 	
 	/********************************
@@ -912,6 +1294,7 @@ function in_greenhouse(){
 		self.save = save;
 		self.toggle_perk = toggle_perk;
 		self.quality_chance = quality_chance;
+		self.quality_chance_display = quality_chance_display;
 		
 		// Miscellaneous client settings
 		self.settings = {
@@ -982,6 +1365,33 @@ function in_greenhouse(){
 					break;
 			}
 			
+			if (locale) return Math.round(chance * 100);
+			return chance;
+		}
+
+		// Display-only quality chance split for the visual bar (splits gold into gold + iridium)
+		// Adds iridium tier (approx. gold_chance * 0.5) without affecting profit calculations.
+		function quality_chance_display(quality, mult, locale){
+			mult = mult || 0;
+			var gold_chance = 0.2 * (self.level / 10) + 0.2 * mult * ((self.level + 2) / 12) + 0.01;
+			var silver_chance = Math.min(0.75, gold_chance * 2);
+			var iridium_chance = gold_chance * 0.5;
+
+			var chance = 0;
+			switch (quality){
+				case 0: // Regular only
+					chance = Math.max(0, 1 - (gold_chance + silver_chance));
+					break;
+				case 1: // Silver-or-better (visually the silver band)
+					chance = Math.min(1, silver_chance);
+					break;
+				case 2: // Gold only (excludes iridium portion)
+					chance = Math.max(0, gold_chance - iridium_chance);
+					break;
+				case 3: // Iridium
+					chance = Math.max(0, iridium_chance);
+					break;
+			}
 			if (locale) return Math.round(chance * 100);
 			return chance;
 		}
@@ -1064,7 +1474,10 @@ function in_greenhouse(){
 			self.seasons = data.seasons;
 			self.stages = data.stages;
 			self.regrow = data.regrow;
+			self.tree = (data.tree) ? true : false;
+			self.group = self.tree ? "Fruit Trees" : "Crops";
 			if (data.wild) self.wild = true;
+			if (data.no_suggest) self.no_suggest = true;
 			
 			// Harvest data
 			if (data.harvest.min) self.harvest.min = data.harvest.min;
@@ -1093,14 +1506,16 @@ function in_greenhouse(){
 			self.profit += self.harvest.min * self.get_sell() * (plantings + regrowths);
 			self.profit = round(self.profit / growth_days, 1);
 			
-			// Calculate fixed budget profit
-			var budget = 1000; // 1000g worth of seeds
-			var plantings = Math.floor(budget / self.buy);
-			var growth_days = self.grow + (regrowths * (self.regrow ? self.regrow : 0));
-			
-			self.fixed_profit -= self.buy * plantings;
-			self.fixed_profit += self.harvest.min * self.get_sell() * (plantings + regrowths);
-			self.fixed_profit = round((self.fixed_profit / growth_days), 1);
+			// Calculate fixed budget profit (skip if buy=0 to avoid division by zero)
+			if (self.buy > 0) {
+				var budget = 1000; // 1000g worth of seeds
+				var plantings = Math.floor(budget / self.buy);
+				var growth_days = self.grow + (regrowths * (self.regrow ? self.regrow : 0));
+				
+				self.fixed_profit -= self.buy * plantings;
+				self.fixed_profit += self.harvest.min * self.get_sell() * (plantings + regrowths);
+				self.fixed_profit = round((self.fixed_profit / growth_days), 1);
+			}
 		}
 	}
 	
@@ -1248,6 +1663,7 @@ function in_greenhouse(){
 					if (!planner.crops[plan.crop]) return; // Invalid crop
 					var plan_object = new Plan(plan, type == "greenhouse");
 					self.data[type].plans[date].push(plan_object);
+					plan_object.year_index = self.index;
 					plan_count++;
 				});
 			});
@@ -1266,8 +1682,19 @@ function in_greenhouse(){
 		
 		// Check that crop can grow
 		var crop = planner.crops[newplan.crop_id];
-		if (!crop || !crop.can_grow(date, false, planner.in_greenhouse())) return false;
+		if (!crop) return false;
+		if (!crop.tree && !crop.can_grow(date, false, planner.in_greenhouse())) return false;
 		newplan.crop = crop;
+
+		// Fruit tree rules: can be planted any season, never uses fertilizer or irrigated growth bonuses.
+		if (crop.tree){
+			newplan.irrigated = false;
+			if (!newplan.fertilizer || !newplan.fertilizer.id){
+				newplan.fertilizer = planner.fertilizer["none"];
+			} else {
+				newplan.fertilizer = planner.fertilizer[newplan.fertilizer.id] || planner.fertilizer["none"];
+			}
+		}
 		
 		// Amount to plant
 		newplan.amount = parseInt(newplan.amount || 0);
@@ -1277,13 +1704,16 @@ function in_greenhouse(){
 		newplan.location = planner.cmode;
 		var plan = new Plan(newplan.get_data(), planner.in_greenhouse());
 		plan.date = date;
+		plan.year_index = this.index;
+		plan.year_index = this.index;
+		plan.year_index = this.index;
 		this.farm().plans[date].push(plan);
 		
 		// Auto-replanting within current year
 		var crop_growth = plan.get_grow_time();
 		var next_planting = date + crop_growth;
 		var next_grow = next_planting + crop_growth;
-		if (!auto_replant || crop.regrow || (auto_replant && !crop.can_grow(next_grow, false, planner.in_greenhouse()))){
+		if (!auto_replant || crop.tree || crop.regrow || (auto_replant && !crop.can_grow(next_grow, false, planner.in_greenhouse()))){
 			// Update
 			update(this);
 			save_data();
@@ -1363,7 +1793,7 @@ function in_greenhouse(){
 	/****************
 		Harvest class - represents crops harvested on a date
 	****************/
-	function Harvest(plan, date, is_regrowth){
+	function Harvest(plan, date, is_regrowth, harvest_year_index){
 		var self = this;
 		self.date = 0;
 		self.plan = {};
@@ -1390,8 +1820,42 @@ function in_greenhouse(){
 			self.yield.min = crop.harvest.min * plan.amount;
 			self.yield.max = (Math.min(crop.harvest.min + 1, crop.harvest.max + 1 + (planner.player.level / crop.harvest.level_increase))-1) * plan.amount;
 			
+
+
+			// Fruit tree behavior differs from crops:
+			// - No extra yield based on Farming level
+			// - Quality is determined by tree age (not random chance)
+			if (crop.tree){
+				self.yield.max = self.yield.min; // always fixed yield
+
+				// Determine fruit quality by tree age since maturity.
+				// 0=normal, 1=silver, 2=gold, 4=iridium
+				var globalPlant = (plan.year_index * YEAR_DAYS) + plan.date;
+				var hy = (typeof harvest_year_index === 'number') ? harvest_year_index : (plan.year_index || 0);
+					var globalNow = (hy * YEAR_DAYS) + date;
+				var matureDay = globalPlant + 28;
+				var yearsSinceMature = Math.floor(Math.max(0, globalNow - matureDay) / YEAR_DAYS);
+
+				var treeQuality = 0;
+				if (yearsSinceMature >= 3) treeQuality = 4;
+				else if (yearsSinceMature >= 2) treeQuality = 2;
+				else if (yearsSinceMature >= 1) treeQuality = 1;
+
+				// Fixed revenue: fruit trees do not use fertilizer-based quality chance.
+				var treeSell = crop.get_sell(treeQuality);
+				self.revenue.min = treeSell * self.yield.min;
+				self.revenue.max = self.revenue.min;
+				self.cost = 0; // planting cost is tracked on planting day
+
+				// Tiller profession still applies to fruit (raw produce).
+				if (planner.player.tiller){
+					self.revenue.min = Math.floor(self.revenue.min * 1.1);
+					self.revenue.max = self.revenue.min;
+				}
+			}
 			// Harvest revenue and costs
 			var q_mult = 0;
+			if (!crop.tree){
 			if (plan.fertilizer && !plan.fertilizer.is_none()){
 				switch (plan.fertilizer.id){
 					case "basic_fertilizer":
@@ -1429,6 +1893,8 @@ function in_greenhouse(){
 				self.revenue.max = Math.floor(self.revenue.max * 1.1);
 			}
 			
+			}
+
 			// Regrowth
 			if (is_regrowth){
 				self.is_regrowth = true;
@@ -1465,6 +1931,9 @@ function in_greenhouse(){
 	function Plan(data, in_greenhouse){
 		var self = this;
 		self.date;
+		self.year_index = 0; // which planner year this plan belongs to
+		self.year_index = 0; // which planner year this plan belongs to
+		self.year_index = 0; // which planner year this plan belongs to
 		self.crop_id;
 		self.crop = {};
 		self.amount = 1;
@@ -1498,7 +1967,7 @@ init();
 	// Compile data to be saved as JSON
 	Plan.prototype.get_data = function(){
     var data = {};
-    data.crop = this.crop.id;
+    data.crop = (this.crop && this.crop.id) ? this.crop.id : this.crop_id;
     data.amount = this.amount;
     if (this.fertilizer && !this.fertilizer.is_none()) data.fertilizer = this.fertilizer.id;
     if (this.irrigated) data.irrigated = true;
@@ -1524,6 +1993,13 @@ Plan.prototype.get_location_label = function(){
 
 Plan.prototype.get_grow_time = function(){
 	var stages = $.extend([], this.crop.stages);
+
+	// Fruit trees ignore fertilizer, irrigated growth reduction, and agriculturist speed bonuses.
+	if (this.crop && this.crop.tree){
+		var tdays = 0;
+		for (var t = 0; t < stages.length; t++) tdays += stages[t];
+		return tdays;
+	}
 
 	// Irrigated paddies (near water): available on Farm or Ginger Island (not Greenhouse)
 	// Rice Shoots: 8 days (6 when irrigated). Taro Tubers: 10 days (7 when irrigated).
