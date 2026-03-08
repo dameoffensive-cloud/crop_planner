@@ -47,112 +47,299 @@
 }
 
 
-/* --- Mobile messaging (desktop-first tool) --- */
+/* =====================================================
+   MOBILE — single authoritative section
+   Covers: header, top menu, season picker, calendar,
+           modal, tables, form, suggestions strip.
+   Breakpoints:
+     ≤767px  = xs (phone portrait + narrow landscape)
+     ≤480px  = xs-tight (most phone portraits)
+   ===================================================== */
+
+/* --- Notice banner --- */
 .mobile-warning {
   display: none;
-  padding: 10px 12px;
+  padding: 6px 12px;
   text-align: center;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-  background: rgba(255, 243, 205, 0.75);
+  background: rgba(255, 243, 205, 0.92);
   color: #5f4b00;
-  font-size: 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(150, 110, 0, 0.2);
 }
-
-.rotate-hint {
-  display: none;
-  margin: 10px 0 12px;
-  padding: 10px 12px;
-  text-align: center;
-  border: 1px dashed rgba(0,0,0,0.25);
-  border-radius: 6px;
-  background: rgba(0,0,0,0.03);
-  font-size: 14px;
-}
-
-/* Show banner on small screens */
-@media (max-width: 768px) {
+@media only screen and (max-width: 767px) {
   .mobile-warning { display: block; }
 }
 
-/* On small screens in portrait, hide the calendar and show the rotate hint */
-@media (max-width: 768px) and (orientation: portrait) {
-  .calendar { display: none; }
-  .rotate-hint { display: block; }
-}
-
-
-
-/* --- Mobile landscape: keep calendar in 7 proper columns --- */
-@media (max-width: 768px) and (orientation: landscape) {
-  .calendar .day_name,
-  .calendar .day {
-    width: 14.2857% !important; /* 100 / 7 */
-    float: left !important;
+/* --- Header: tighter on mobile --- */
+@media only screen and (max-width: 767px) {
+  header {
+    padding: 4px 10px 2px;
+    margin: 0;
   }
-
-  .calendar .day_names,
-  .calendar .day_container {
-    width: 100% !important;
-    overflow: hidden;
+  header .logo { height: 32px; }
+  header .page_title {
+    font-size: 15px;
+    margin-left: 8px;
+    top: 4px;
   }
 }
 
+/* --- #content: remove large min-height and excess padding on mobile --- */
+@media only screen and (max-width: 767px) {
+  #content {
+    padding: 0 !important;
+    min-height: 0 !important;
+    border-left: 0;
+    border-right: 0;
+  }
+}
 
+/* --- Top menu: compact single-row on mobile --- */
+@media only screen and (max-width: 767px) {
+  #top_menu {
+    margin-top: 0;
+    padding-top: 8px;
+  }
+  #top_menu > div { margin-bottom: 8px; padding: 0 8px; }
 
-/* --- Mobile landscape override (undo 2-column mobile calendar) --- */
+  /* Year nav, farm picker, year info all inline */
+  .year_navigation {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .year_navigation .sn_arrows .btn { padding: 8px 10px; }
+  .year_navigation .farm_picker .btn { padding: 5px 7px; }
+  .year_navigation .year_info { flex: 1; }
+  .year_navigation .year_info .yi_name  { font-size: 15px; font-weight: 700; }
+  .year_navigation .year_info .yi_farmtype { font-size: 12px; color: #777; }
+}
+
+/* Mobile compact stat strip (shown only on xs, defined in HTML) */
+.mobile-stat-strip {
+  display: none;
+}
+@media only screen and (max-width: 767px) {
+  .mobile-stat-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 4px 0 2px;
+    font-size: 12px;
+    color: #444;
+    flex-wrap: wrap;
+  }
+  .mobile-stat-strip .fa {
+    color: #7a5c28;
+    margin-right: 3px;
+  }
+  .mobile-clear-btn {
+    margin-left: auto;
+    padding: 3px 8px;
+    background: #ddd;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #555;
+  }
+  .mobile-clear-btn:active { background: #ccc; }
+}
+
+/* --- Season picker: compact pill tabs on mobile --- */
+@media only screen and (max-width: 767px) {
+  #season_picker {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #e8e0c8;
+    border-bottom: 2px solid #5E360C;
+    margin: 0;
+  }
+  #season_picker .col-xs-3 { padding: 0; }
+  #season_picker .season {
+    height: 34px !important;
+    padding: 0 4px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0 !important;
+    border-bottom: 0;
+    border-top: 0;
+    border-left: 1px solid #5E360C;
+    border-right: 0;
+  }
+  #season_picker .season:first-child { border-left: 0; }
+  #season_picker .season.active {
+    background-color: #f5efd0;
+    bottom: 0 !important;
+  }
+  .mobile-season-name {
+    font-size: 13px !important;
+    font-weight: 700;
+    margin: 0 !important;
+    text-transform: capitalize;
+  }
+  #season_picker .season .image {
+    display: block !important;
+    position: static !important;
+    margin: 0 4px 0 0 !important;
+    height: 18px !important;
+    border: none !important;
+  }
+}
+
+/* --- Calendar portrait: 2-column auto-height cells --- */
+@media only screen and (max-width: 767px) and (orientation: portrait) {
+  #calendar .day_container .day {
+    height: auto !important;
+    min-height: 80px;
+    padding-bottom: 28px; /* room for profit */
+  }
+  /* Crop icons slightly larger on the 2-column grid */
+  #calendar .day_container .day .planting .plan img,
+  #calendar .day_container .day .harvesting .plan img {
+    width: 22px !important;
+  }
+}
+
+/* --- Calendar landscape: restore 7-column layout --- */
 @media only screen and (max-width: 767px) and (orientation: landscape) {
+  #calendar .day_names .day_name { display: block; }
   #calendar .day_names .day_name,
   #calendar .day_container .day {
     width: 14.28571429% !important;
     float: left !important;
   }
-
-  /* Undo the mobile padding that assumes 2-column layout */
   #calendar .day_container .day {
     padding-top: 4px !important;
-    height: 120px; /* slightly shorter for small screens */
+    height: 105px !important;
   }
 }
 
+/* --- Calendar all mobile: readable day label and profit --- */
+@media only screen and (max-width: 767px) {
+  #calendar .day_container .day .date_top .date {
+    font-size: 12px !important;
+  }
+  #calendar .day_container .day .profit,
+  #calendar .day_container .day .profit.min {
+    font-size: 10px !important;
+    bottom: 2px !important;
+    left: 4px !important;
+  }
+  /* Quick-plant prompt: slightly smaller */
+  .quick-plant-prompt {
+    font-size: 9px;
+    padding: 2px 3px;
+  }
+}
 
-
-/* ---------------------------
-   MOBILE ROLLBACK (Desktop-first)
-   --------------------------- */
-
-@media only screen and (max-width: 767px) and (orientation: landscape) {
-  #calendar .day_names .day_name,
-  #calendar .day_container .day {
+/* --- Modal: full-screen on mobile --- */
+@media only screen and (max-width: 767px) {
+  .modal-dialog {
+    min-width: 0 !important;
     width: auto !important;
-    float: none !important;
+    margin: 0 !important;
+  }
+  .modal-content {
+    border-radius: 0 !important;
+    border: none !important;
+    min-height: 100vh;
+  }
+  .modal .modal-body  { padding: 10px 8px; }
+  .modal .modal-header { padding: 10px 12px; }
+  .modal .modal-footer { padding: 8px 12px; }
+  .modal .modal-title  { font-size: 14px; }
+  .modal .close { padding: 12px; margin: -8px -8px -8px 0; }
+}
+
+/* --- Modal tables: card layout on mobile --- */
+@media only screen and (max-width: 767px) {
+  /* Hide the thead — labels come from data-label attributes */
+  .modal .crops thead { display: none; }
+
+  .modal .crops tbody tr {
+    display: block;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    background: #fff;
+    padding: 6px 8px;
+    position: relative;
+  }
+  .modal .crops tbody td {
+    display: inline-flex;
+    align-items: center;
+    border: none !important;
+    padding: 2px 4px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  /* First two tds (icon + name) go full width as the card header */
+  .modal .crops tbody td:nth-child(1) {
+    padding-right: 6px;
+  }
+  .modal .crops tbody td:nth-child(2) {
+    font-weight: 600;
+    font-size: 14px;
+    flex: 1;
+  }
+  /* Action buttons (edit/delete) float right */
+  .modal .crops tbody td:last-child,
+  .modal .crops tbody td:nth-last-child(2) {
+    float: right;
+    padding: 2px 2px;
+  }
+  /* Hide lower-priority columns in card view */
+  .mobile-hide { display: none !important; }
+}
+
+/* --- Form inputs: prevent iOS zoom, improve tap targets --- */
+@media only screen and (max-width: 767px) {
+  .modal .form-control {
+    font-size: 16px !important; /* prevents iOS auto-zoom */
+    height: 40px;
+    padding: 8px 10px;
+  }
+  .modal .btn {
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  /* Plant/Autoplant buttons: full-width stacked on mobile */
+  .plant-actions {
+    display: flex !important;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .plant-actions .btn {
+    flex: 1;
+  }
+  /* Crop search dropdown: taller items for touch */
+  .crop-search-item {
+    padding: 10px 10px !important;
+    font-size: 14px !important;
+  }
+  .crop-search-item img {
+    width: 22px !important;
+    height: 22px !important;
   }
 }
 
-.mobile-warning {
-  display: none;
-  padding: 10px 12px;
-  text-align: center;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-  background: rgba(255, 243, 205, 0.75);
-  color: #5f4b00;
-  font-size: 14px;
-}
-
-.rotate-hint {
-  display: none;
-  margin: 10px 0 12px;
-  padding: 10px 12px;
-  text-align: center;
-  border: 1px dashed rgba(0,0,0,0.25);
-  border-radius: 6px;
-  background: rgba(0,0,0,0.03);
-  font-size: 14px;
-}
-
-@media (max-width: 768px) {
-  .mobile-warning { display: block; }
-  .calendar { display: none; }
-  .rotate-hint { display: block; }
+/* --- Suggestion chips: scroll horizontally on mobile --- */
+@media only screen and (max-width: 767px) {
+  .replant-chips {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .replant-chip {
+    flex-shrink: 0;
+  }
 }
 
 
@@ -230,3 +417,376 @@
   width: auto !important;
 }
 
+
+
+/* Fruit trees cannot use fertilizer */
+select[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ============================================================
+   UX IMPROVEMENTS - appended
+   ============================================================ */
+
+
+/* --- #1 Searchable crop picker --- */
+.crop-search-wrapper {
+  position: relative;
+}
+.crop-search-wrapper input::placeholder {
+  color: #555;
+  font-style: italic;
+}
+.crop-search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  max-height: 240px;
+  overflow-y: auto;
+  background: #f5f5f5;
+  border: 1px solid #aaa;
+  border-top: none;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+.crop-search-item {
+  padding: 5px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  border-bottom: 1px solid #e5e5e5;
+  transition: background-color 0.1s;
+}
+.crop-search-item:last-child { border-bottom: none; }
+.crop-search-item img { width: 24px; height: auto; image-rendering: pixelated; flex-shrink: 0; }
+.crop-search-item:hover { background-color: #e2e8f0; }
+.crop-search-selected { background-color: #dde8c8 !important; font-weight: 600; }
+.crop-group-label { margin-left: auto; font-size: 12px; opacity: 0.7; }
+.crop-search-empty { padding: 8px 10px; color: #888; font-style: italic; font-size: 13px; }
+
+
+/* --- #2 Calendar day tinting (planting / harvest / both) --- */
+#calendar .day_container .day.has-planting {
+  background-color: #cdd5e8;
+}
+#calendar .day_container .day.has-planting:hover {
+  background-color: #bdc7dc;
+}
+#calendar .day_container .day.has-harvest {
+  background-color: #c8dfc0;
+}
+#calendar .day_container .day.has-harvest:hover {
+  background-color: #b8d0b0;
+}
+/* has-both: left half = harvest green, right half = planting blue */
+#calendar .day_container .day.has-both {
+  background: linear-gradient(to right, #c8dfc0 50%, #cdd5e8 50%);
+}
+#calendar .day_container .day.has-both:hover {
+  background: linear-gradient(to right, #b8d0b0 50%, #bdc7dc 50%);
+}
+
+
+/* --- #3 Iridium quality bar segment --- */
+#sb_settings .farm_level .chance_scale > div.iridium {
+  background-color: #a47dc8;
+  background: linear-gradient(135deg, #d4b8f0 0%, #a87cd4 50%, #9060c0 51%, #c4a0e8 100%);
+  box-shadow: 0 0 1px 1px rgba(255,255,255,.35) inset;
+}
+#sb_settings .farm_level .chance_scale > div.iridium .name {
+  left: 0;
+}
+
+
+/* --- #4 Sort direction indicators on Crop Info headers --- */
+.sort-indicator {
+  font-size: 11px;
+  color: #5E360C;
+  font-weight: bold;
+  margin-left: 2px;
+}
+#sb_cropinfo .crops_container .crops thead th {
+  white-space: nowrap;
+  user-select: none;
+}
+#sb_cropinfo .crops_container .crops thead th:hover {
+  background-color: #e8e8e8;
+}
+
+
+/* --- #5 Location badge colour coding --- */
+.loc_badge {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  font-size: 10px;
+  line-height: 12px;
+  padding: 1px 4px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: bold;
+}
+.loc-badge-farm     { background: rgba(94, 54, 12, 0.75); }   /* Stardew brown */
+.loc-badge-greenhouse { background: rgba(50, 130, 60, 0.80); } /* muted green */
+.loc-badge-island   { background: rgba(185, 110, 20, 0.80); } /* warm sandy orange */
+
+
+/* --- #7 Profit colour tinting on calendar days --- */
+#calendar .day_container .day .profit.profit-pos,
+#calendar .day_container .day .profit.profit-pos > div {
+  color: #2a6e1e;
+  font-weight: bold;
+}
+#calendar .day_container .day .profit.profit-neg,
+#calendar .day_container .day .profit.profit-neg > div {
+  color: #8b1a1a;
+}
+
+
+/* --- #8 Profit tinting on season tabs --- */
+#season_picker .season .profit-pos { color: #2a6e1e; font-weight: bold; }
+#season_picker .season .profit-neg { color: #8b1a1a; }
+
+
+/* --- #9 "More…" styled as a subtle link --- */
+#calendar .day_container .day .more a {
+  color: #5E360C;
+  opacity: 0.75;
+  font-size: 12px;
+  font-style: italic;
+  text-decoration: underline dotted;
+  cursor: pointer;
+}
+#calendar .day_container .day .more a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+
+/* --- #10 Legacy section in Settings --- */
+.legacy-section {
+  margin-top: 4px;
+}
+.legacy-toggle {
+  cursor: pointer;
+  color: #666;
+  font-size: 13px;
+  padding: 4px 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px dashed #bbb;
+  user-select: none;
+  transition: color 0.15s;
+}
+.legacy-toggle:hover { color: #333; }
+.legacy-toggle .fa { font-size: 12px; }
+
+
+/* --- #11 Empty state styling in modal --- */
+.empty-state {
+  font-style: italic;
+  opacity: 0.75;
+  padding: 4px 0;
+}
+
+
+/* --- #12 FBP inline tooltip --- */
+.fbp-help {
+  cursor: help;
+  border-bottom: 1px dotted #888;
+  color: #555;
+}
+
+
+/* --- #6 Keyboard hints in Settings --- */
+.keyboard-hints {
+  background: rgba(0,0,0,0.04);
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #555;
+}
+.keyboard-hints .hint-title {
+  font-weight: bold;
+  color: #444;
+  margin-bottom: 5px;
+}
+.keyboard-hints .hint-row {
+  margin: 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.keyboard-hints kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: monospace;
+  background: #fff;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.15);
+  color: #333;
+}
+
+
+/* --- #13 Mobile sticky season picker --- */
+@media only screen and (max-width: 767px) {
+  #season_picker {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: #eee;
+  }
+}
+
+
+
+/* --- Quick-plant prompt on harvest-day calendar cells --- */
+.quick-plant-prompt {
+  position: absolute;
+  bottom: 3px;
+  left: 4px;
+  right: 4px;
+  background: rgba(60, 100, 50, 0.82);
+  color: #e8f5e0;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.1;
+  padding: 2px 5px 3px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s, color 0.15s;
+  z-index: 2;
+  letter-spacing: 0.01em;
+}
+.quick-plant-prompt:hover {
+  background: rgba(40, 80, 30, 0.92);
+  color: #fff;
+}
+.quick-plant-prompt .fa {
+  font-size: 9px;
+  margin-right: 2px;
+  opacity: 0.85;
+}
+
+/* On small screens keep it readable */
+@media only screen and (max-width: 991px) {
+  .quick-plant-prompt {
+    font-size: 9px;
+    padding: 2px 3px;
+  }
+}
+
+
+/* --- Fertilizer badge on calendar planting cells --- */
+/* Sits bottom-left of each plan icon, opposite corner from loc_badge */
+.plan .fert-badge {
+  position: absolute;
+  bottom: -7px;
+  left: -6px;
+  width: 14px;
+  height: 14px;
+  background: rgba(255,255,255,0.82);
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+.plan .fert-badge img {
+  width: 10px;
+  height: 10px;
+  image-rendering: pixelated;
+  display: block;
+}
+
+@media only screen and (max-width: 991px) {
+  .plan .fert-badge {
+    width: 11px;
+    height: 11px;
+    bottom: -6px;
+    left: -5px;
+  }
+  .plan .fert-badge img {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+
+/* --- Modal replanting suggestions strip --- */
+.replant-suggestions {
+  margin: 0 0 16px;
+  padding: 10px 12px 12px;
+  background: #f7f2e4;
+  border: 1px solid #d4c49a;
+  border-radius: 3px;
+}
+.replant-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7a5c28;
+  margin-bottom: 8px;
+}
+.replant-label .fa {
+  margin-right: 4px;
+}
+.replant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.replant-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px 6px 7px;
+  background: #ede5cc;
+  border: 1px solid #c8ab72;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  min-width: 0;
+}
+.replant-chip:hover {
+  background: #e2d5b0;
+  border-color: #a07840;
+}
+.replant-chip-active {
+  background: #d4c48a !important;
+  border-color: #7a5c28 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
+}
+.replant-chip img {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+.replant-chip-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3a2800;
+  white-space: nowrap;
+}
+.replant-chip-meta {
+  font-size: 11px;
+  color: #7a6030;
+  white-space: nowrap;
+  margin-left: 2px;
+}
