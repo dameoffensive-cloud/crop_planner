@@ -888,9 +888,80 @@
         2,
         2
       ],
-      "wild": true,
-      "note": "Crafted (5 Mixed Seeds + 5 Fiber + 5 Sap). Grows in 7 days in any season. Yields ~1-3 Fiber. Cannot be fertilized. Add images/seeds/fiber_seeds.png and images/crops/fiber_seeds.png.",
+      "note": "Crafted (5 Mixed Seeds + 5 Fiber + 5 Sap). Grows in 7 days in any season. Yields ~1-3 Fiber.",
       "harvest": {}
+    },
+    {
+      "id": "spring_seeds",
+      "name": "Spring Seeds",
+      "buy": 1,
+      "sell": 35,
+      "seasons": [
+        "spring"
+      ],
+      "stages": [
+        1,
+        2,
+        2,
+        2
+      ],
+      "harvest": {},
+      "wild": true,
+      "note": "Crafted from Spring forage. Grows in 7 days. Yields random Spring forage (avg ~35g)."
+    },
+    {
+      "id": "summer_seeds",
+      "name": "Summer Seeds",
+      "buy": 1,
+      "sell": 80,
+      "seasons": [
+        "summer"
+      ],
+      "stages": [
+        1,
+        2,
+        2,
+        2
+      ],
+      "harvest": {},
+      "wild": true,
+      "note": "Crafted from Summer forage. Grows in 7 days. Yields random Summer forage (avg ~80g)."
+    },
+    {
+      "id": "fall_seeds",
+      "name": "Fall Seeds",
+      "buy": 1,
+      "sell": 78,
+      "seasons": [
+        "fall"
+      ],
+      "stages": [
+        1,
+        2,
+        2,
+        2
+      ],
+      "harvest": {},
+      "wild": true,
+      "note": "Crafted from Fall forage. Grows in 7 days. Yields random Fall forage (avg ~78g)."
+    },
+    {
+      "id": "winter_seeds",
+      "name": "Winter Seeds",
+      "buy": 1,
+      "sell": 30,
+      "seasons": [
+        "winter"
+      ],
+      "stages": [
+        1,
+        2,
+        2,
+        2
+      ],
+      "harvest": {},
+      "wild": true,
+      "note": "Crafted from Winter forage. Grows in 7 days. Yields random Winter forage (avg ~30g)."
     },
     {
       "id": "qi_beans",
