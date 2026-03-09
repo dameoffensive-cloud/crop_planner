@@ -905,7 +905,11 @@
         2,
         2
       ],
-      "harvest": {},
+      "harvest": {
+        "min": 1,
+        "max": 3,
+        "level_increase": 7
+      },
       "wild": true,
       "note": "Crafted from Spring forage. Grows in 7 days. Yields random Spring forage (avg ~35g)."
     },
@@ -923,7 +927,11 @@
         2,
         2
       ],
-      "harvest": {},
+      "harvest": {
+        "min": 1,
+        "max": 3,
+        "level_increase": 7
+      },
       "wild": true,
       "note": "Crafted from Summer forage. Grows in 7 days. Yields random Summer forage (avg ~80g)."
     },
@@ -941,7 +949,11 @@
         2,
         2
       ],
-      "harvest": {},
+      "harvest": {
+        "min": 1,
+        "max": 3,
+        "level_increase": 7
+      },
       "wild": true,
       "note": "Crafted from Fall forage. Grows in 7 days. Yields random Fall forage (avg ~78g)."
     },
@@ -959,7 +971,11 @@
         2,
         2
       ],
-      "harvest": {},
+      "harvest": {
+        "min": 1,
+        "max": 3,
+        "level_increase": 7
+      },
       "wild": true,
       "note": "Crafted from Winter forage. Grows in 7 days. Yields random Winter forage (avg ~30g)."
     },
@@ -1397,5 +1413,5 @@
       }
     ]
   },
-  "updated_at": "2026-03-08"
+  "updated_at": "2026-02-08"
 }
