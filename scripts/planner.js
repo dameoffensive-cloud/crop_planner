@@ -1562,7 +1562,9 @@ function in_greenhouse(){
 	
 	// Get thumbnail image
 	Crop.prototype.get_image = function(seeds){
-		if (seeds && this.wild){
+		if (this.wild){
+			// Wild seeds use the seasonal wild image for both planting and harvest display —
+			// there is no separate crop image (the harvest is forage, not a single identifiable item).
 			return "images/seeds/wild_"+this.seasons[0]+".png";
 		}
 		if (seeds) return "images/seeds/"+this.id+".png";
