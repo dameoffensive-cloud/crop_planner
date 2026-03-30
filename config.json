@@ -1169,12 +1169,14 @@
       "buy": 0,
       "growth_rate": 0.33,
       "id": "hyper_speed_gro",
-      "name": "Hyper Speed-Gro"
+      "name": "Hyper Speed-Gro",
+      "note": "Crafted (3 Bone Fragments + 1 Radioactive Ore). No shop price."
     },
     {
       "buy": 0,
       "id": "deluxe_fertilizer",
-      "name": "Deluxe Fertilizer"
+      "name": "Deluxe Fertilizer",
+      "note": "Crafted (30 Fiber + 1 Iridium Ore). No shop price. Increases gold/iridium quality chance."
     }
   ],
   "events": {

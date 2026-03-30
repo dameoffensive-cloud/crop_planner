@@ -1343,14 +1343,17 @@ function in_greenhouse(){
 			}
 		}
 		
-		// Get scalar value of chance of crop being 0=regular; 1=silver; 2=gold quality
+		// Get scalar value of chance of crop being 0=regular; 1=silver; 2=gold; 3=iridium quality
+		// mult: 0=none, 1=basic fertilizer, 2=quality fertilizer, 3=deluxe fertilizer
 		// [SOURCE: StardewValley/Crop.cs : function harvest]
 		function quality_chance(quality, mult, locale){
-			quality = quality || 0;		// Default: check regular quality chance
-			mult = mult || 0;			// Multiplier given by type of fertilizer used (0, 1, or 2)
+			quality = quality || 0;
+			mult = mult || 0;
 			
 			var gold_chance = 0.2 * (self.level / 10) + 0.2 * mult * ((self.level + 2) / 12) + 0.01;
 			var silver_chance = Math.min(0.75, gold_chance * 2);
+			// Deluxe Fertilizer (mult=3): iridium chance = gold_chance / 2
+			var iridium_chance = (mult >= 3) ? gold_chance * 0.5 : 0;
 			
 			var chance = 0;
 			switch (quality){
@@ -1361,7 +1364,10 @@ function in_greenhouse(){
 					chance = Math.min(1, silver_chance);
 					break;
 				case 2:
-					chance = Math.min(1, gold_chance);
+					chance = Math.min(1, gold_chance - iridium_chance);
+					break;
+				case 3:
+					chance = Math.min(1, iridium_chance);
 					break;
 			}
 			
@@ -1369,31 +1375,9 @@ function in_greenhouse(){
 			return chance;
 		}
 
-		// Display-only quality chance split for the visual bar (splits gold into gold + iridium)
-		// Adds iridium tier (approx. gold_chance * 0.5) without affecting profit calculations.
+		// Delegates to quality_chance so the quality bar display always matches profit calculations.
 		function quality_chance_display(quality, mult, locale){
-			mult = mult || 0;
-			var gold_chance = 0.2 * (self.level / 10) + 0.2 * mult * ((self.level + 2) / 12) + 0.01;
-			var silver_chance = Math.min(0.75, gold_chance * 2);
-			var iridium_chance = gold_chance * 0.5;
-
-			var chance = 0;
-			switch (quality){
-				case 0: // Regular only
-					chance = Math.max(0, 1 - (gold_chance + silver_chance));
-					break;
-				case 1: // Silver-or-better (visually the silver band)
-					chance = Math.min(1, silver_chance);
-					break;
-				case 2: // Gold only (excludes iridium portion)
-					chance = Math.max(0, gold_chance - iridium_chance);
-					break;
-				case 3: // Iridium
-					chance = Math.max(0, iridium_chance);
-					break;
-			}
-			if (locale) return Math.round(chance * 100);
-			return chance;
+			return quality_chance(quality, mult, locale);
 		}
 	}
 	
@@ -1560,7 +1544,7 @@ function in_greenhouse(){
 	
 	// Get thumbnail image
 	Crop.prototype.get_image = function(seeds){
-		if (seeds && this.wild){
+		if (this.wild){
 			return "images/seeds/wild_"+this.seasons[0]+".png";
 		}
 		if (seeds) return "images/seeds/"+this.id+".png";
@@ -1862,6 +1846,9 @@ function in_greenhouse(){
 					case "quality_fertilizer":
 						q_mult = 2;
 						break;
+					case "deluxe_fertilizer":
+						q_mult = 3;
+						break;
 				}
 			}
 			
@@ -1873,10 +1860,12 @@ function in_greenhouse(){
 			var regular_chance = planner.player.quality_chance(0, q_mult);
 			var silver_chance = planner.player.quality_chance(1, q_mult);
 			var gold_chance = planner.player.quality_chance(2, q_mult);
+			var iridium_chance = planner.player.quality_chance(3, q_mult);
 			
 			var min_revenue = crop.get_sell(0);
-			var max_revenue = (min_revenue*regular_chance) + (crop.get_sell(1)*silver_chance) + (crop.get_sell(2)*gold_chance);
-			max_revenue = Math.min(crop.get_sell(2), max_revenue);
+			// get_sell(4) = sell*2 (iridium 2x), matching the game's quality=4 internal value
+			var max_revenue = (min_revenue*regular_chance) + (crop.get_sell(1)*silver_chance) + (crop.get_sell(2)*gold_chance) + (crop.get_sell(4)*iridium_chance);
+			max_revenue = Math.min(crop.get_sell(4), max_revenue);
 			
 			// Quality from fertilizer only applies to picked harvest
 			// and not to extra dropped yields
